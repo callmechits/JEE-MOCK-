@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Leaderboard — JEEAdv26</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0e17;--surface:#111827;--border:#1e2d40;--accent:#00c2ff;--accent2:#ff6b35;--gold:#ffd700;--text:#e2e8f0;--muted:#64748b;--phy:#3b82f6;--chem:#10b981;--math:#f59e0b;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;}
+  nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
+  .nav-logo span{color:var(--accent2);}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;margin-left:1.5rem;text-transform:uppercase;letter-spacing:0.05em;}
+  .nav-links a:hover,.nav-links a.active{color:var(--accent);}
+  .main{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:2rem;}
+  .page-title{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:0.5rem;}
+  .page-title span{color:var(--accent);}
+  h1{font-size:2rem;font-weight:700;margin-bottom:2rem;}
+
+  /* TABS */
+  .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:2rem;width:fit-content;}
+  .tab{padding:0.6rem 1.4rem;font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;transition:all 0.15s;background:transparent;border:none;font-family:inherit;}
+  .tab:not(:last-child){border-right:1px solid var(--border);}
+  .tab.active{background:var(--accent);color:var(--bg);}
+
+  /* PAPER SELECTOR */
+  .paper-select-wrap{margin-bottom:1.5rem;}
+  select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.6rem 1rem;border-radius:4px;font-family:inherit;font-size:0.88rem;cursor:pointer;}
+  select:focus{outline:none;border-color:var(--accent);}
+  select option{background:var(--surface);}
+
+  /* PODIUM */
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:1rem;margin-bottom:3rem;padding:1.5rem;}
+  .pod-item{text-align:center;flex:1;max-width:180px;}
+  .pod-block{border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:1.8rem;font-weight:700;}
+  .pod-1{height:120px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));border:1px solid rgba(255,215,0,0.4);color:var(--gold);}
+  .pod-2{height:90px;background:linear-gradient(180deg,rgba(192,192,192,0.15),rgba(192,192,192,0.03));border:1px solid rgba(192,192,192,0.3);color:#c0c0c0;}
+  .pod-3{height:70px;background:linear-gradient(180deg,rgba(205,127,50,0.15),rgba(205,127,50,0.03));border:1px solid rgba(205,127,50,0.3);color:#cd7f32;}
+  .pod-name{font-weight:700;font-size:0.9rem;margin-top:0.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pod-score{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--muted);}
+
+  /* TABLE */
+  .lb-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .lb-table thead tr{background:rgba(0,194,255,0.05);border-bottom:1px solid var(--border);}
+  .lb-table th{padding:0.75rem 1rem;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+  .lb-table th.center{text-align:center;}
+  .lb-table td{padding:0.85rem 1rem;border-bottom:1px solid rgba(30,45,64,0.7);font-size:0.88rem;vertical-align:middle;}
+  .lb-table tr:last-child td{border-bottom:none;}
+  .lb-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .rank{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:0.9rem;text-align:center;}
+  .rank.r1{color:var(--gold);}
+  .rank.r2{color:#c0c0c0;}
+  .rank.r3{color:#cd7f32;}
+  .name-cell{font-weight:600;}
+  .score-cell{font-family:'IBM Plex Mono',monospace;font-size:0.88rem;text-align:center;}
+  .phy{color:var(--phy);}
+  .chem{color:var(--chem);}
+  .math{color:var(--math);}
+  .total-cell{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:700;text-align:center;color:var(--text);}
+  .papers-cell{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-align:center;color:var(--muted);}
+
+  /* SUBJECT BARS */
+  .subject-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:2px;margin-top:0.3rem;}
+  .sb-phy,.sb-chem,.sb-math{height:100%;border-radius:2px;transition:width 0.3s;}
+  .sb-phy{background:var(--phy);}
+  .sb-chem{background:var(--chem);}
+  .sb-math{background:var(--math);}
+
+  .empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:0.9rem;}
+  footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.8rem;margin-top:3rem;}
+  footer a{color:var(--accent2);text-decoration:none;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">JEE<span>ADV</span>26</div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="leaderboard.html" class="active">Leaderboard</a>
+    <a href="papers.html">Papers</a>
+    <a href="admin.html">Admin</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-title"><span>#</span> Rankings</div>
+  <h1>Leaderboard</h1>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overall',this)">Overall</button>
+    <button class="tab" onclick="switchTab('paper',this)">Per Paper</button>
+  </div>
+
+  <!-- OVERALL -->
+  <div id="tab-overall">
+    <div id="podium-overall" class="podium"></div>
+    <table class="lb-table">
+      <thead><tr><th class="center">#</th><th>Student</th><th class="center">PHY</th><th class="center">CHEM</th><th class="center">MATH</th><th class="center">TOTAL</th><th class="center">Papers</th></tr></thead>
+      <tbody id="overall-body"></tbody>
+    </table>
+  </div>
+
+  <!-- PER PAPER -->
+  <div id="tab-paper" style="display:none;">
+    <div class="paper-select-wrap">
+      <select id="paper-select" onchange="renderPaperLb()">
+        <option value="">— Select a Paper —</option>
+      </select>
+    </div>
+    <div id="podium-paper" class="podium"></div>
+    <table class="lb-table">
+      <thead><tr><th class="center">#</th><th>Student</th><th class="center">PHY</th><th class="center">CHEM</th><th class="center">MATH</th><th class="center">TOTAL</th><th class="center">Submitted</th></tr></thead>
+      <tbody id="paper-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Built for <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank">r/JEEAdv26dailyupdates</a> 🎯</footer>
+
+<script src="js/storage.js"></script>
+<script>
+  async function init() {
+    await Storage.pullFromSheets();
+    renderOverall();
+    populatePaperSelect();
+  }
+
+  function switchTab(name, el) {
+    document.getElementById('tab-overall').style.display = name==='overall'?'block':'none';
+    document.getElementById('tab-paper').style.display = name==='paper'?'block':'none';
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function renderPodium(data, containerId) {
+    const container = document.getElementById(containerId);
+    if (data.length < 1) { container.style.display='none'; return; }
+    container.style.display='flex';
+    const order = [data[1], data[0], data[2]].filter(Boolean);
+    const blockClass = ['pod-2','pod-1','pod-3'];
+    const emojis = ['🥈','🥇','🥉'];
+    container.innerHTML = order.map((e,i)=>`
+      <div class="pod-item">
+        <div class="pod-block ${blockClass[i]}">${emojis[i]}</div>
+        <div class="pod-name">${e.username}</div>
+        <div class="pod-score">${e.total} pts</div>
+      </div>`).join('');
+  }
+
+  function renderOverall() {
+    const data = Storage.getOverallLeaderboard();
+    renderPodium(data, 'podium-overall');
+    const maxTotal = data[0]?.total || 1;
+    const tbody = document.getElementById('overall-body');
+    if (!data.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No attempts yet. Be the first to attempt a mock!</div></td></tr>'; return; }
+    const rankSymbol = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+    const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
+    tbody.innerHTML = data.map((e,i)=>{
+      const max = Math.max(e.phy,e.chem,e.math,1);
+      return `<tr>
+        <td><div class="rank ${rankClass(i)}">${rankSymbol(i)}</div></td>
+        <td><div class="name-cell">${e.username}</div>
+          <div class="subject-bar">
+            <div class="sb-phy" style="width:${(e.phy/maxTotal*100*0.33).toFixed(1)}%"></div>
+            <div class="sb-chem" style="width:${(e.chem/maxTotal*100*0.33).toFixed(1)}%"></div>
+            <div class="sb-math" style="width:${(e.math/maxTotal*100*0.33).toFixed(1)}%"></div>
+          </div>
+        </td>
+        <td><div class="score-cell phy">${e.phy}</div></td>
+        <td><div class="score-cell chem">${e.chem}</div></td>
+        <td><div class="score-cell math">${e.math}</div></td>
+        <td><div class="total-cell">${e.total}</div></td>
+        <td><div class="papers-cell">${e.count}</div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function populatePaperSelect() {
+    const papers = Storage.getPapers().filter(p=>new Date(p.endTime).getTime()<Date.now());
+    const sel = document.getElementById('paper-select');
+    papers.forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.title;
+      sel.appendChild(opt);
+    });
+  }
+
+  function renderPaperLb() {
+    const paperId = document.getElementById('paper-select').value;
+    if (!paperId) return;
+    const data = Storage.getPaperLeaderboard(paperId);
+    renderPodium(data, 'podium-paper');
+    const tbody = document.getElementById('paper-body');
+    if (!data.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No submissions for this paper yet.</div></td></tr>'; return; }
+    const rankSymbol = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+    const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
+    tbody.innerHTML = data.map((e,i)=>`<tr>
+      <td><div class="rank ${rankClass(i)}">${rankSymbol(i)}</div></td>
+      <td><div class="name-cell">${e.username}</div></td>
+      <td><div class="score-cell phy">${e.phy}</div></td>
+      <td><div class="score-cell chem">${e.chem}</div></td>
+      <td><div class="score-cell math">${e.math}</div></td>
+      <td><div class="total-cell">${e.total}</div></td>
+      <td style="font-size:0.75rem;color:var(--muted);text-align:center;">${new Date(e.submittedAt).toLocaleDateString('en-IN')}</td>
+    </tr>`).join('');
+  }
+
+  init();
+</script>
+</body>
+</html>
