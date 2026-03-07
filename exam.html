@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exam — JEEAdv26</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #fff; --border: #e2e5ea; --accent: #1a56db;
+    --phy: #1a56db; --chem: #057a55; --math: #c27803;
+    --text: #111827; --muted: #6b7280;
+    --not-visited: #fff; --not-answered: #ef4444; --answered: #22c55e;
+    --marked: #f59e0b; --marked-answered: #8b5cf6;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* TOP BAR */
+  #topbar {
+    background: #1e2d40; color: #fff; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 1rem; height: 52px; flex-shrink:0;
+  }
+  #topbar-title { font-weight: 700; font-size: 0.95rem; }
+  #username-display { font-size: 0.8rem; color: #94a3b8; }
+  #timer-box { background: #0f172a; padding: 0.4rem 1rem; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; font-weight: 700; color: #22c55e; min-width: 100px; text-align: center; }
+  #timer-box.warning { color: #f59e0b; }
+  #timer-box.critical { color: #ef4444; animation: blink 0.5s infinite; }
+  @keyframes blink { 50% { opacity: 0.5; } }
+
+  /* SECTION TABS */
+  #section-tabs { background: #fff; border-bottom: 2px solid var(--border); display: flex; flex-shrink:0; overflow-x: auto; }
+  .sec-tab { padding: 0.6rem 1.2rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space:nowrap; color: var(--muted); transition: all 0.15s; }
+  .sec-tab.phy { border-color: transparent; }
+  .sec-tab.chem { border-color: transparent; }
+  .sec-tab.math { border-color: transparent; }
+  .sec-tab.active.phy { color: var(--phy); border-color: var(--phy); background: rgba(26,86,219,0.05); }
+  .sec-tab.active.chem { color: var(--chem); border-color: var(--chem); background: rgba(5,122,85,0.05); }
+  .sec-tab.active.math { color: var(--math); border-color: var(--math); background: rgba(194,120,3,0.05); }
+
+  /* MAIN LAYOUT */
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  /* QUESTION PANEL */
+  #question-panel { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  #q-meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  #q-number { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.85rem; background: var(--accent); color: #fff; padding: 0.25rem 0.75rem; border-radius: 3px; }
+  #q-type-badge { font-size: 0.75rem; background: var(--bg); border: 1px solid var(--border); padding: 0.2rem 0.6rem; border-radius: 3px; color: var(--muted); }
+  #q-marks { font-size: 0.75rem; color: var(--muted); }
+  #q-body { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; line-height: 1.8; font-size: 0.95rem; }
+  #q-body img { max-width: 100%; border-radius: 4px; margin: 0.5rem 0; }
+
+  /* OPTIONS */
+  #options-area { display: flex; flex-direction: column; gap: 0.6rem; }
+  .option-btn {
+    display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1rem;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 6px;
+    cursor: pointer; transition: all 0.15s; font-size: 0.9rem; text-align: left; width: 100%;
+    font-family: inherit;
+  }
+  .option-btn:hover { border-color: var(--accent); background: rgba(26,86,219,0.03); }
+  .option-btn.selected { border-color: var(--accent); background: rgba(26,86,219,0.08); }
+  .option-btn.selected .opt-label { background: var(--accent); color: #fff; }
+  .opt-label { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink:0; transition: all 0.15s; }
+  .opt-text img { max-width: 100%; }
+
+  /* INTEGER INPUT */
+  #integer-input { display: none; }
+  #integer-input input { width: 200px; padding: 0.75rem 1rem; font-size: 1.1rem; font-family: 'IBM Plex Mono', monospace; border: 2px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+  #integer-input input:focus { outline: none; border-color: var(--accent); }
+  #integer-input .int-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; }
+
+  /* ACTION BUTTONS */
+  #action-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: 0.5rem; }
+  .act-btn { padding: 0.6rem 1.2rem; border-radius: 4px; font-weight: 600; font-size: 0.82rem; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; }
+  #btn-save-next { background: #22c55e; color: #fff; }
+  #btn-save-next:hover { background: #16a34a; }
+  #btn-mark-review { background: #f59e0b; color: #fff; }
+  #btn-mark-review:hover { background: #d97706; }
+  #btn-clear { background: var(--bg); border: 1.5px solid var(--border); color: var(--muted); }
+  #btn-prev, #btn-next { background: var(--bg); border: 1.5px solid var(--border); color: var(--text); }
+  #btn-submit-final { background: #ef4444; color: #fff; margin-left: auto; }
+  #btn-submit-final:hover { background: #dc2626; }
+
+  /* SIDEBAR */
+  #sidebar { width: 260px; flex-shrink:0; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+  #sidebar-user { padding: 0.75rem 1rem; background: #1e2d40; color: #fff; font-size: 0.8rem; }
+  #sidebar-user strong { display: block; font-size: 0.95rem; }
+  #legend { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; color: var(--muted); }
+  .legend-dot { width: 16px; height: 16px; border-radius: 3px; flex-shrink:0; }
+  .ld-nv { background: var(--not-visited); border: 1.5px solid var(--border); }
+  .ld-na { background: var(--not-answered); }
+  .ld-an { background: var(--answered); }
+  .ld-mr { background: var(--marked); }
+  .ld-ma { background: var(--marked-answered); }
+
+  #sidebar-sections { flex:1; overflow-y: auto; padding: 0.5rem; }
+  .sidebar-sec-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 0.5rem 0.4rem 0.3rem; }
+  .qnum-grid { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bg); margin-bottom: 0.4rem; }
+  .qnum-btn {
+    width: 34px; height: 34px; border-radius: 4px; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; border: none; background: var(--not-visited); border: 1.5px solid var(--border);
+    color: var(--text); transition: all 0.15s; font-family: inherit;
+  }
+  .qnum-btn.current { box-shadow: 0 0 0 2.5px var(--accent); }
+  .qnum-btn.answered { background: var(--answered); color: #fff; border-color: #16a34a; }
+  .qnum-btn.not-answered { background: var(--not-answered); color: #fff; border-color: #dc2626; }
+  .qnum-btn.marked { background: var(--marked); color: #fff; border-color: #d97706; }
+  .qnum-btn.marked-answered { background: var(--marked-answered); color: #fff; border-color: #7c3aed; }
+
+  /* SUBMIT MODAL */
+  #modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+  #modal-overlay.show { display:flex; }
+  #modal { background:#fff; border-radius:8px; padding:2rem; max-width:460px; width:90%; }
+  #modal h2 { font-size:1.2rem; margin-bottom:1rem; }
+  #modal-stats { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin:1rem 0; }
+  .mstat { background:var(--bg); border-radius:4px; padding:0.75rem; text-align:center; }
+  .mstat-num { font-size:1.4rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  .mstat-label { font-size:0.72rem; color:var(--muted); }
+  #modal-btns { display:flex; gap:0.75rem; margin-top:1.5rem; justify-content:flex-end; }
+
+  /* USERNAME MODAL */
+  #username-modal { position:fixed; inset:0; background:rgba(10,14,23,0.9); z-index:2000; display:flex; align-items:center; justify-content:center; }
+  #username-modal.hidden { display:none; }
+  #username-box { background:#1e2d40; border:1px solid #2d4a6b; border-radius:8px; padding:2.5rem; max-width:400px; width:90%; text-align:center; }
+  #username-box h2 { color:#fff; margin-bottom:0.5rem; }
+  #username-box p { color:#94a3b8; font-size:0.85rem; margin-bottom:1.5rem; }
+  #username-input { width:100%; padding:0.75rem 1rem; border-radius:4px; border:1px solid #2d4a6b; background:#0f172a; color:#fff; font-size:1rem; font-family:inherit; margin-bottom:1rem; }
+  #username-input:focus { outline:none; border-color:#00c2ff; }
+  #username-submit { width:100%; padding:0.75rem; background:#00c2ff; color:#0a0e17; font-weight:700; border:none; border-radius:4px; font-size:1rem; cursor:pointer; font-family:inherit; }
+  #honor-note { font-size:0.75rem; color:#64748b; margin-top:0.75rem; }
+</style>
+</head>
+<body>
+
+<!-- USERNAME MODAL -->
+<div id="username-modal">
+  <div id="username-box">
+    <h2>Enter Your Name</h2>
+    <p>This name will appear on the leaderboard. No login required.</p>
+    <input type="text" id="username-input" placeholder="Your name / Reddit username" maxlength="30" autocomplete="off"/>
+    <button id="username-submit">Start Exam →</button>
+    <div id="honor-note">⚖️ Honor system — please don't cheat yourself.</div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div>
+    <div id="topbar-title">Loading...</div>
+    <div id="username-display"></div>
+  </div>
+  <div id="timer-box">3:00:00</div>
+</div>
+
+<!-- SECTION TABS -->
+<div id="section-tabs"></div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="question-panel">
+    <div id="q-meta">
+      <span id="q-number">Q1</span>
+      <span id="q-type-badge">SCQ</span>
+      <span id="q-marks"></span>
+    </div>
+    <div id="q-body"></div>
+    <div id="options-area"></div>
+    <div id="integer-input">
+      <input type="number" id="int-val" placeholder="Type your answer..." step="any"/>
+      <div class="int-hint">Enter integer or decimal value</div>
+    </div>
+    <div id="action-btns">
+      <button class="act-btn" id="btn-prev">◀ Prev</button>
+      <button class="act-btn" id="btn-next">Next ▶</button>
+      <button class="act-btn" id="btn-save-next">Save & Next</button>
+      <button class="act-btn" id="btn-mark-review">Mark for Review</button>
+      <button class="act-btn" id="btn-clear">Clear</button>
+      <button class="act-btn" id="btn-submit-final">Submit Paper</button>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <div id="sidebar-user"><strong id="sb-username">—</strong>Candidate</div>
+    <div id="legend">
+      <div class="legend-item"><div class="legend-dot ld-nv"></div> Not Visited</div>
+      <div class="legend-item"><div class="legend-dot ld-na"></div> Not Answered</div>
+      <div class="legend-item"><div class="legend-dot ld-an"></div> Answered</div>
+      <div class="legend-item"><div class="legend-dot ld-mr"></div> Marked</div>
+      <div class="legend-item"><div class="legend-dot ld-ma"></div> Marked+Ans</div>
+    </div>
+    <div id="sidebar-sections"></div>
+  </div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h2>📋 Submit Paper?</h2>
+    <p style="font-size:0.85rem;color:#6b7280;">Once submitted, you cannot change answers.</p>
+    <div id="modal-stats"></div>
+    <div id="modal-btns">
+      <button class="act-btn" onclick="closeModal()" style="border:1.5px solid #e2e5ea;">Go Back</button>
+      <button class="act-btn" id="btn-confirm-submit" style="background:#ef4444;color:#fff;">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const paperId = params.get('id');
+  let paper = null, username = '', currentQIdx = 0, timerInterval = null;
+  let answers = {}, states = {}; // states: 'visited','not-answered','answered','marked','marked-answered'
+  let sections = [], currentSec = null;
+  let attempt = null;
+
+  // ── INIT ────────────────────────────────────────────────────
+  window.onload = async () => {
+    await Storage.pullFromSheets();
+    paper = Storage.getPaper(paperId);
+    if (!paper) { alert('Paper not found!'); location.href='index.html'; return; }
+    // Check if exam window is open
+    const now = Date.now();
+    const start = new Date(paper.startTime).getTime();
+    const end = new Date(paper.endTime).getTime();
+    if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
+    if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
+    document.getElementById('topbar-title').textContent = paper.title;
+    buildSections();
+    showUsernameModal();
+  };
+
+  function showUsernameModal() {
+    document.getElementById('username-modal').classList.remove('hidden');
+    document.getElementById('username-input').focus();
+    document.getElementById('username-submit').onclick = startExam;
+    document.getElementById('username-input').onkeydown = e => { if(e.key==='Enter') startExam(); };
+  }
+
+  function startExam() {
+    const val = document.getElementById('username-input').value.trim();
+    if (!val) { document.getElementById('username-input').style.borderColor='#ef4444'; return; }
+    username = val;
+    // Load or create attempt
+    attempt = Storage.getUserAttempt(paperId, username);
+    if (attempt && attempt.submitted) { alert('You have already submitted this paper!'); location.href=`results.html?id=${paperId}`; return; }
+    if (!attempt) {
+      attempt = { id: Storage.generateId(), paperId, username, startedAt: Date.now(), submitted: false, answers: {}, states: {}, scores: null };
+    }
+    answers = attempt.answers || {};
+    states = attempt.states || {};
+    document.getElementById('username-modal').classList.add('hidden');
+    document.getElementById('username-display').textContent = `Candidate: ${username}`;
+    document.getElementById('sb-username').textContent = username;
+    startTimer();
+    renderSectionTabs();
+    switchSection(sections[0].key);
+  }
+
+  // ── SECTIONS ─────────────────────────────────────────────────
+  function buildSections() {
+    const order = ['physics','chemistry','mathematics'];
+    const found = {};
+    paper.questions.forEach(q => { if(!found[q.subject]) found[q.subject]=[]; found[q.subject].push(q); });
+    sections = order.filter(s=>found[s]).map(s=>({ key:s, label: s.charAt(0).toUpperCase()+s.slice(1), questions: found[s] }));
+  }
+
+  const subjectClass = { physics:'phy', chemistry:'chem', mathematics:'math' };
+
+  function renderSectionTabs() {
+    const container = document.getElementById('section-tabs');
+    container.innerHTML = sections.map(s=>`<div class="sec-tab ${subjectClass[s.key]}" data-sec="${s.key}" onclick="switchSection('${s.key}')">${s.label}</div>`).join('');
+  }
+
+  function switchSection(secKey) {
+    currentSec = sections.find(s=>s.key===secKey);
+    document.querySelectorAll('.sec-tab').forEach(t=>{ t.classList.toggle('active', t.dataset.sec===secKey); });
+    currentQIdx = 0;
+    renderSidebar();
+    renderQuestion();
+  }
+
+  // ── TIMER ────────────────────────────────────────────────────
+  function startTimer() {
+    const end = new Date(paper.endTime).getTime();
+    timerInterval = setInterval(() => {
+      const rem = Math.max(0, end - Date.now());
+      const h = Math.floor(rem/3600000), m = Math.floor((rem%3600000)/60000), s = Math.floor((rem%60000)/1000);
+      const box = document.getElementById('timer-box');
+      box.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      box.className = rem < 300000 ? 'critical' : rem < 1800000 ? 'warning' : '';
+      if (rem <= 0) { clearInterval(timerInterval); autoSubmit(); }
+    }, 1000);
+  }
+
+  // ── RENDER QUESTION ──────────────────────────────────────────
+  function renderQuestion() {
+    if (!currentSec) return;
+    const q = currentSec.questions[currentQIdx];
+    if (!states[q.id] || states[q.id]==='not-visited') states[q.id] = 'visited';
+
+    document.getElementById('q-number').textContent = `Q${getGlobalIdx(q)+1}`;
+    const typeLabels = { scq:'Single Correct (+3/−1)', mcq:'Multi Correct (+4/partial/−2)', integer:'Integer (Numerical) (+3/0)' };
+    document.getElementById('q-type-badge').textContent = typeLabels[q.type] || q.type.toUpperCase();
+    document.getElementById('q-marks').textContent = q.type==='scq'?'+3/−1':q.type==='mcq'?'+4/−2':'+3/0';
+
+    // Body
+    const bodyEl = document.getElementById('q-body');
+    bodyEl.innerHTML = q.body || '';
+    if (q.image) {
+      const img = document.createElement('img');
+      img.src = q.image; img.style.maxWidth='100%';
+      bodyEl.appendChild(img);
+    }
+
+    // Options
+    const optArea = document.getElementById('options-area');
+    const intArea = document.getElementById('integer-input');
+    if (q.type === 'integer') {
+      optArea.style.display='none'; intArea.style.display='block';
+      document.getElementById('int-val').value = answers[q.id] ?? '';
+    } else {
+      optArea.style.display='flex'; optArea.style.flexDirection='column'; intArea.style.display='none';
+      const selectedAnswers = q.type==='mcq' ? (Array.isArray(answers[q.id])?answers[q.id]:[]) : [answers[q.id]];
+      optArea.innerHTML = (q.options||[]).map((opt,i)=>{
+        const label = ['A','B','C','D'][i];
+        const sel = selectedAnswers.includes(label);
+        return `<button class="option-btn ${sel?'selected':''}" onclick="selectOption('${label}','${q.id}','${q.type}')">
+          <span class="opt-label">${label}</span>
+          <span class="opt-text">${opt}${q.optionImages&&q.optionImages[i]?`<br><img src="${q.optionImages[i]}" style="max-height:80px;">`:''}</span>
+        </button>`;
+      }).join('');
+    }
+    renderSidebar();
+  }
+
+  function getGlobalIdx(q) { return paper.questions.findIndex(pq=>pq.id===q.id); }
+
+  // ── INTERACTIONS ─────────────────────────────────────────────
+  function selectOption(label, qId, type) {
+    if (type === 'scq') {
+      answers[qId] = answers[qId]===label ? null : label;
+    } else {
+      let arr = Array.isArray(answers[qId]) ? [...answers[qId]] : [];
+      const idx = arr.indexOf(label);
+      if (idx>=0) arr.splice(idx,1); else arr.push(label);
+      answers[qId] = arr;
+    }
+    updateState(qId);
+    renderQuestion();
+  }
+
+  function updateState(qId) {
+    const ans = answers[qId];
+    const hasAns = Array.isArray(ans) ? ans.length>0 : (ans!==null&&ans!==undefined&&ans!=='');
+    const prev = states[qId];
+    if (prev==='marked'||prev==='marked-answered') {
+      states[qId] = hasAns ? 'marked-answered' : 'marked';
+    } else {
+      states[qId] = hasAns ? 'answered' : 'not-answered';
+    }
+  }
+
+  document.getElementById('btn-save-next').onclick = () => {
+    saveCurrentInteger(); autoSave(); goNext();
+  };
+  document.getElementById('btn-mark-review').onclick = () => {
+    saveCurrentInteger();
+    const q = currentSec.questions[currentQIdx];
+    const ans = answers[q.id];
+    const hasAns = Array.isArray(ans)?ans.length>0:(ans!==null&&ans!==''&&ans!==undefined);
+    states[q.id] = hasAns ? 'marked-answered' : 'marked';
+    autoSave(); goNext();
+  };
+  document.getElementById('btn-clear').onclick = () => {
+    const q = currentSec.questions[currentQIdx];
+    answers[q.id] = q.type==='mcq'?[]:null;
+    document.getElementById('int-val').value='';
+    states[q.id]='not-answered';
+    renderQuestion();
+  };
+  document.getElementById('btn-prev').onclick = () => { if(currentQIdx>0){currentQIdx--;renderQuestion();} };
+  document.getElementById('btn-next').onclick = goNext;
+
+  function saveCurrentInteger() {
+    const q = currentSec.questions[currentQIdx];
+    if (q.type==='integer') {
+      const val = document.getElementById('int-val').value.trim();
+      answers[q.id] = val==='' ? null : val;
+      updateState(q.id);
+    }
+  }
+
+  function goNext() {
+    if (currentQIdx < currentSec.questions.length-1) { currentQIdx++; renderQuestion(); }
+    else {
+      const nextSecIdx = sections.findIndex(s=>s.key===currentSec.key)+1;
+      if (nextSecIdx < sections.length) switchSection(sections[nextSecIdx].key);
+    }
+  }
+
+  function autoSave() {
+    attempt.answers = answers;
+    attempt.states = states;
+    Storage.saveAttempt(attempt);
+  }
+
+  // ── SIDEBAR ──────────────────────────────────────────────────
+  function renderSidebar() {
+    const container = document.getElementById('sidebar-sections');
+    container.innerHTML = sections.map(s=>{
+      const nums = s.questions.map((q,i)=>{
+        const st = states[q.id]||'not-visited';
+        const isCur = currentSec&&currentSec.key===s.key&&i===currentQIdx;
+        return `<button class="qnum-btn ${st} ${isCur?'current':''}" onclick="jumpTo('${s.key}',${i})">${getGlobalIdx(q)+1}</button>`;
+      }).join('');
+      return `<div class="sidebar-sec-title">${s.label}</div><div class="qnum-grid">${nums}</div>`;
+    }).join('');
+  }
+
+  function jumpTo(secKey, idx) {
+    switchSection(secKey);
+    currentQIdx = idx;
+    renderQuestion();
+  }
+
+  // ── SUBMIT ───────────────────────────────────────────────────
+  document.getElementById('btn-submit-final').onclick = openModal;
+  function openModal() {
+    saveCurrentInteger(); autoSave();
+    const all = paper.questions;
+    const ans = all.filter(q=>{ const a=answers[q.id]; return Array.isArray(a)?a.length>0:(a!==null&&a!==undefined&&a!==''); });
+    const marked = all.filter(q=>states[q.id]==='marked'||states[q.id]==='marked-answered');
+    const notVisited = all.filter(q=>!states[q.id]||states[q.id]==='not-visited');
+    document.getElementById('modal-stats').innerHTML = `
+      <div class="mstat"><div class="mstat-num" style="color:#22c55e">${ans.length}</div><div class="mstat-label">Answered</div></div>
+      <div class="mstat"><div class="mstat-num" style="color:#ef4444">${all.length-ans.length}</div><div class="mstat-label">Not Answered</div></div>
+      <div class="mstat"><div class="mstat-num" style="color:#f59e0b">${marked.length}</div><div class="mstat-label">Marked for Review</div></div>
+      <div class="mstat"><div class="mstat-num" style="color:#6b7280">${notVisited.length}</div><div class="mstat-label">Not Visited</div></div>`;
+    document.getElementById('modal-overlay').classList.add('show');
+    document.getElementById('btn-confirm-submit').onclick = submitPaper;
+  }
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+  function submitPaper() {
+    saveCurrentInteger();
+    attempt.answers = answers;
+    attempt.states = states;
+    attempt.submitted = true;
+    attempt.submittedAt = Date.now();
+    attempt.scores = Storage.scoreAttempt(attempt, paper);
+    Storage.saveAttempt(attempt);
+    clearInterval(timerInterval);
+    location.href = `results.html?id=${paperId}&attempt=${attempt.id}`;
+  }
+
+  function autoSubmit() { submitPaper(); }
+</script>
+</body>
+</html>
