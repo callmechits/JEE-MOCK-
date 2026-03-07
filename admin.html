@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — JEEAdv26</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0a0e17;--surface:#111827;--border:#1e2d40;--accent:#00c2ff;--accent2:#ff6b35;--text:#e2e8f0;--muted:#64748b;--phy:#3b82f6;--chem:#10b981;--math:#f59e0b; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  nav{background:rgba(10,14,23,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;position:sticky;top:0;z-index:100;}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
+  .nav-logo span{color:var(--accent2);}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;margin-left:1.5rem;text-transform:uppercase;letter-spacing:0.05em;}
+  .nav-links a:hover{color:var(--accent);}
+
+  /* LOGIN */
+  #login-wall{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;}
+  #login-wall.hidden{display:none;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2.5rem;max-width:380px;width:90%;text-align:center;}
+  .login-box h2{font-size:1.3rem;margin-bottom:0.5rem;}
+  .login-box p{color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;}
+  .form-input{width:100%;padding:0.75rem 1rem;background:#0f172a;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.95rem;font-family:inherit;margin-bottom:1rem;}
+  .form-input:focus{outline:none;border-color:var(--accent);}
+  .btn-primary{background:var(--accent);color:var(--bg);padding:0.75rem 1.5rem;border:none;border-radius:4px;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;width:100%;}
+  .btn-primary:hover{background:#33cfff;}
+  .btn-danger{background:#ef4444;color:#fff;padding:0.5rem 1rem;border:none;border-radius:4px;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:inherit;}
+  .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);padding:0.5rem 1rem;border-radius:4px;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:inherit;}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-small{background:var(--accent);color:var(--bg);padding:0.4rem 0.8rem;border:none;border-radius:3px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  /* LAYOUT */
+  .admin-layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 60px);}
+  .admin-nav{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 0;}
+  .admin-nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.5rem;color:var(--muted);cursor:pointer;font-size:0.88rem;font-weight:500;transition:all 0.15s;}
+  .admin-nav-item:hover,.admin-nav-item.active{color:var(--accent);background:rgba(0,194,255,0.05);}
+  .admin-nav-item .icon{font-size:1rem;width:20px;text-align:center;}
+  .admin-nav-sep{height:1px;background:var(--border);margin:0.75rem 1rem;}
+  .admin-content{padding:2rem;overflow-y:auto;}
+
+  /* PANELS */
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .panel-title{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
+  .panel-title span{color:var(--accent);}
+
+  /* FORM */
+  .form-group{margin-bottom:1.25rem;}
+  .form-label{display:block;font-size:0.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .form-textarea{width:100%;padding:0.75rem 1rem;background:#0f172a;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.9rem;font-family:inherit;resize:vertical;min-height:80px;}
+  .form-textarea:focus,.form-input:focus{outline:none;border-color:var(--accent);}
+  select.form-input option{background:#0f172a;}
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1rem;}
+
+  /* IMAGE UPLOAD */
+  .img-upload-area{border:2px dashed var(--border);border-radius:6px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;background:#0f172a;}
+  .img-upload-area:hover{border-color:var(--accent);}
+  .img-upload-area input{display:none;}
+  .img-preview{max-width:100%;max-height:200px;border-radius:4px;margin-top:0.75rem;}
+  .img-upload-label{font-size:0.82rem;color:var(--muted);}
+
+  /* QUESTION LIST */
+  .q-list-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin-bottom:0.6rem;display:flex;align-items:flex-start;gap:1rem;}
+  .q-list-num{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:700;background:var(--border);padding:0.2rem 0.5rem;border-radius:3px;white-space:nowrap;}
+  .q-list-body{flex:1;font-size:0.85rem;color:var(--text);line-height:1.5;}
+  .q-list-meta{font-size:0.72rem;color:var(--muted);margin-top:0.25rem;}
+  .q-list-actions{display:flex;gap:0.4rem;}
+  .subj-tag{font-size:0.68rem;padding:0.15rem 0.5rem;border-radius:2px;font-weight:700;}
+  .subj-phy{background:rgba(59,130,246,0.15);color:var(--phy);}
+  .subj-chem{background:rgba(16,185,129,0.15);color:var(--chem);}
+  .subj-math{background:rgba(245,158,11,0.15);color:var(--math);}
+
+  /* PAPERS TABLE */
+  .papers-table{width:100%;border-collapse:collapse;}
+  .papers-table th{text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);padding:0.6rem 0.75rem;border-bottom:1px solid var(--border);}
+  .papers-table td{padding:0.75rem;border-bottom:1px solid rgba(30,45,64,0.5);font-size:0.85rem;vertical-align:middle;}
+  .papers-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+  /* GS CONFIG */
+  .gs-box{background:rgba(0,194,255,0.05);border:1px solid rgba(0,194,255,0.2);border-radius:6px;padding:1.5rem;}
+  .gs-step{display:flex;gap:1rem;margin-bottom:1rem;align-items:flex-start;}
+  .gs-step-num{width:26px;height:26px;background:var(--accent);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;}
+  .gs-step-text{font-size:0.85rem;color:var(--text);line-height:1.6;}
+  .gs-step-text code{background:rgba(0,194,255,0.1);padding:0.1rem 0.4rem;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--accent);}
+
+  .notice{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:4px;padding:0.75rem 1rem;font-size:0.82rem;color:#ffa07a;margin-bottom:1rem;}
+  .success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:0.75rem 1rem;font-size:0.82rem;color:#4ade80;margin-bottom:1rem;}
+
+  .tag-row{display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;}
+  .opt-entry{display:flex;gap:0.5rem;margin-bottom:0.5rem;align-items:center;}
+  .opt-entry input{flex:1;}
+  .opt-label-fixed{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--accent);width:20px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN WALL -->
+<div id="login-wall">
+  <div class="login-box">
+    <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+    <h2>Admin Panel</h2>
+    <p>Enter the admin password to continue.</p>
+    <input type="password" id="admin-pass" class="form-input" placeholder="Password" autocomplete="off"/>
+    <button class="btn-primary" onclick="doLogin()">Login</button>
+    <div id="login-err" style="color:#ef4444;font-size:0.8rem;margin-top:0.75rem;display:none;">Wrong password.</div>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-logo">JEE<span>ADV</span>26 <span style="font-size:0.7rem;color:var(--muted);margin-left:0.5rem;">ADMIN</span></div>
+  <div class="nav-links">
+    <a href="index.html">← Back to Site</a>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <div class="admin-nav">
+    <div class="admin-nav-item active" onclick="showPanel('papers')" id="nav-papers"><span class="icon">📋</span>Papers</div>
+    <div class="admin-nav-item" onclick="showPanel('create-paper')" id="nav-create-paper"><span class="icon">➕</span>Create Paper</div>
+    <div class="admin-nav-sep"></div>
+    <div class="admin-nav-item" onclick="showPanel('add-question')" id="nav-add-question"><span class="icon">✏️</span>Add Question</div>
+    <div class="admin-nav-sep"></div>
+    <div class="admin-nav-item" onclick="showPanel('settings')" id="nav-settings"><span class="icon">⚙️</span>Settings & GSheets</div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- PAPERS LIST -->
+    <div class="panel active" id="panel-papers">
+      <div class="panel-title"><span>//</span> All Papers</div>
+      <div id="papers-list"></div>
+    </div>
+
+    <!-- CREATE PAPER -->
+    <div class="panel" id="panel-create-paper">
+      <div class="panel-title"><span>+</span> Create New Paper</div>
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Paper Title</label>
+          <input type="text" class="form-input" id="cp-title" placeholder="e.g. JEE Mock #1 — Full Syllabus"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Date & Time</label>
+            <input type="datetime-local" class="form-input" id="cp-start"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date & Time</label>
+            <input type="datetime-local" class="form-input" id="cp-end"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <textarea class="form-textarea" id="cp-desc" placeholder="Topics covered, difficulty, etc."></textarea>
+        </div>
+        <button class="btn-primary" onclick="createPaper()">Create Paper</button>
+        <div id="cp-msg" style="margin-top:0.75rem;"></div>
+      </div>
+    </div>
+
+    <!-- ADD QUESTION -->
+    <div class="panel" id="panel-add-question">
+      <div class="panel-title"><span>✏️</span> Add Question to Paper</div>
+
+      <div class="form-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Paper</label>
+            <select class="form-input" id="aq-paper"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <select class="form-input" id="aq-subject">
+              <option value="physics">Physics</option>
+              <option value="chemistry">Chemistry</option>
+              <option value="mathematics">Mathematics</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Question Type</label>
+          <select class="form-input" id="aq-type" onchange="onTypeChange()">
+            <option value="scq">SCQ — Single Correct (+3/−1)</option>
+            <option value="mcq">MCQ — Multi Correct (+4/partial/−2)</option>
+            <option value="integer">Integer / Numerical (+3/0)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Question Text (supports HTML)</label>
+          <textarea class="form-textarea" id="aq-body" placeholder="Type the question. You can use basic HTML like &lt;sup&gt;, &lt;sub&gt;, &lt;b&gt;..." style="min-height:100px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Question Image (optional)</label>
+          <div class="img-upload-area" onclick="document.getElementById('aq-img-input').click()">
+            <input type="file" id="aq-img-input" accept="image/*" onchange="previewImage(this,'aq-img-preview')"/>
+            <div class="img-upload-label">📎 Click to upload image (PNG/JPG/SVG)</div>
+            <img id="aq-img-preview" class="img-preview" style="display:none;"/>
+          </div>
+        </div>
+
+        <!-- SCQ / MCQ OPTIONS -->
+        <div id="options-section">
+          <div class="form-group">
+            <label class="form-label">Answer Options</label>
+            <div id="options-list">
+              <div class="opt-entry"><span class="opt-label-fixed">A</span><input type="text" class="form-input" id="opt-A" placeholder="Option A text"/><div class="img-upload-area" style="padding:0.4rem 0.75rem;cursor:pointer;" onclick="document.getElementById('opt-img-A').click()"><input type="file" id="opt-img-A" accept="image/*" onchange="previewOptImg(this,'A')"/><span style="font-size:0.72rem;color:var(--muted);">+img</span></div></div>
+              <div class="opt-entry"><span class="opt-label-fixed">B</span><input type="text" class="form-input" id="opt-B" placeholder="Option B text"/><div class="img-upload-area" style="padding:0.4rem 0.75rem;cursor:pointer;" onclick="document.getElementById('opt-img-B').click()"><input type="file" id="opt-img-B" accept="image/*" onchange="previewOptImg(this,'B')"/><span style="font-size:0.72rem;color:var(--muted);">+img</span></div></div>
+              <div class="opt-entry"><span class="opt-label-fixed">C</span><input type="text" class="form-input" id="opt-C" placeholder="Option C text"/><div class="img-upload-area" style="padding:0.4rem 0.75rem;cursor:pointer;" onclick="document.getElementById('opt-img-C').click()"><input type="file" id="opt-img-C" accept="image/*" onchange="previewOptImg(this,'C')"/><span style="font-size:0.72rem;color:var(--muted);">+img</span></div></div>
+              <div class="opt-entry"><span class="opt-label-fixed">D</span><input type="text" class="form-input" id="opt-D" placeholder="Option D text"/><div class="img-upload-area" style="padding:0.4rem 0.75rem;cursor:pointer;" onclick="document.getElementById('opt-img-D').click()"><input type="file" id="opt-img-D" accept="image/*" onchange="previewOptImg(this,'D')"/><span style="font-size:0.72rem;color:var(--muted);">+img</span></div></div>
+            </div>
+          </div>
+          <div class="form-group" id="correct-scq">
+            <label class="form-label">Correct Answer</label>
+            <select class="form-input" id="aq-correct-scq">
+              <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+            </select>
+          </div>
+          <div class="form-group" id="correct-mcq" style="display:none;">
+            <label class="form-label">Correct Answers (select all that apply)</label>
+            <div class="tag-row">
+              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="mcq-A" value="A"/> A</label>
+              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="mcq-B" value="B"/> B</label>
+              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="mcq-C" value="C"/> C</label>
+              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="mcq-D" value="D"/> D</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTEGER CORRECT -->
+        <div class="form-group" id="correct-integer" style="display:none;">
+          <label class="form-label">Correct Answer (integer/decimal)</label>
+          <input type="number" class="form-input" id="aq-correct-int" placeholder="e.g. 4 or 3.14" step="any"/>
+        </div>
+
+        <!-- SOLUTION -->
+        <div class="form-group">
+          <label class="form-label">Solution / Explanation (shown after deadline)</label>
+          <textarea class="form-textarea" id="aq-solution" placeholder="Step-by-step solution..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Solution Image (optional)</label>
+          <div class="img-upload-area" onclick="document.getElementById('aq-sol-img').click()">
+            <input type="file" id="aq-sol-img" accept="image/*" onchange="previewImage(this,'aq-sol-preview')"/>
+            <div class="img-upload-label">📎 Upload solution diagram</div>
+            <img id="aq-sol-preview" class="img-preview" style="display:none;"/>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="addQuestion()">Add Question →</button>
+        <div id="aq-msg" style="margin-top:0.75rem;"></div>
+      </div>
+
+      <!-- CURRENT QUESTIONS -->
+      <div class="panel-title" style="margin-top:2rem;"><span>//</span> Questions in Selected Paper</div>
+      <div id="question-list-preview"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-title"><span>⚙️</span> Settings & Google Sheets Integration</div>
+
+      <div class="gs-box" style="margin-bottom:2rem;">
+        <div style="font-weight:700;margin-bottom:1rem;color:var(--accent);">📊 Connect Google Sheets (Free Database)</div>
+        <div class="gs-step"><div class="gs-step-num">1</div><div class="gs-step-text">Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);">sheets.google.com</a> → Create a new spreadsheet named <code>JEEAdv26-DB</code>.</div></div>
+        <div class="gs-step"><div class="gs-step-num">2</div><div class="gs-step-text">Click <b>Extensions → Apps Script</b>. Paste the script from the <code>google-apps-script.js</code> file (included in this project). Save and Deploy as a Web App (access: Anyone).</div></div>
+        <div class="gs-step"><div class="gs-step-num">3</div><div class="gs-step-text">Copy the Web App URL and paste it below. Scores will auto-sync after every submission.</div></div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">Google Apps Script Web App URL</label>
+          <input type="text" class="form-input" id="gs-url" placeholder="https://script.google.com/macros/s/.../exec"/>
+        </div>
+        <button class="btn-primary" onclick="saveGsUrl()">Save URL</button>
+        <div id="gs-msg" style="margin-top:0.5rem;"></div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Change Admin Password</label>
+          <input type="password" class="form-input" id="new-pass" placeholder="New password"/>
+        </div>
+        <button class="btn-primary" onclick="changePass()">Update Password</button>
+        <div id="pass-msg" style="margin-top:0.5rem;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script>
+  // ── LOGIN ──
+  const settings = Storage.getSettings();
+  document.getElementById('admin-pass').onkeydown = e => { if(e.key==='Enter') doLogin(); };
+  function doLogin() {
+    const pass = document.getElementById('admin-pass').value;
+    if (pass === Storage.getSettings().adminPass) {
+      document.getElementById('login-wall').classList.add('hidden');
+      init();
+    } else {
+      document.getElementById('login-err').style.display='block';
+    }
+  }
+
+  function init() {
+    renderPapers();
+    populatePaperDropdowns();
+    // Pre-fill GS URL
+    const s = Storage.getSettings();
+    if (s.gsUrl) document.getElementById('gs-url').value = s.gsUrl;
+    // Set default times (now + 1hr for start, + 4hr for end)
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const start = new Date(now.getTime() + 3600000);
+    const end = new Date(now.getTime() + 4*3600000);
+    document.getElementById('cp-start').value = fmt(start);
+    document.getElementById('cp-end').value = fmt(end);
+  }
+
+  // ── NAV ──
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    document.getElementById('nav-'+name).classList.add('active');
+    if(name==='add-question') { populatePaperDropdowns(); renderQuestionList(); }
+    if(name==='papers') renderPapers();
+  }
+
+  // ── PAPERS ──
+  function renderPapers() {
+    const papers = Storage.getPapers();
+    const container = document.getElementById('papers-list');
+    if (!papers.length) { container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet. Create one!</p>'; return; }
+    container.innerHTML = `<table class="papers-table">
+      <thead><tr><th>#</th><th>Title</th><th>Start</th><th>End</th><th>Questions</th><th>Attempts</th><th>Actions</th></tr></thead>
+      <tbody>${papers.map((p,i)=>{
+        const attempts = Storage.getAttemptsForPaper(p.id).length;
+        return `<tr>
+          <td><span style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--muted);">${i+1}</span></td>
+          <td><strong>${p.title}</strong></td>
+          <td style="font-size:0.8rem;color:var(--muted);">${new Date(p.startTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'})}</td>
+          <td style="font-size:0.8rem;color:var(--muted);">${new Date(p.endTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'})}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;">${attempts}</td>
+          <td><div style="display:flex;gap:0.5rem;">
+            <button class="btn-small" onclick="editPaperQuestions('${p.id}')">Edit Qs</button>
+            <button class="btn-small" style="background:#ef4444;" onclick="deletePaper('${p.id}')">Delete</button>
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  function populatePaperDropdowns() {
+    const papers = Storage.getPapers();
+    const sel = document.getElementById('aq-paper');
+    sel.innerHTML = papers.map(p=>`<option value="${p.id}">${p.title}</option>`).join('') || '<option value="">No papers yet</option>';
+    sel.onchange = renderQuestionList;
+  }
+
+  function createPaper() {
+    const title = document.getElementById('cp-title').value.trim();
+    const start = document.getElementById('cp-start').value;
+    const end = document.getElementById('cp-end').value;
+    if (!title||!start||!end) { showMsg('cp-msg','Please fill all required fields.','error'); return; }
+    const paper = { id: Storage.generateId(), title, startTime: new Date(start).toISOString(), endTime: new Date(end).toISOString(), questions: [], number: Storage.getPapers().length+1, createdAt: Date.now() };
+    Storage.savePaper(paper);
+    showMsg('cp-msg','Paper created! Go to "Add Question" to add questions.','success');
+    document.getElementById('cp-title').value='';
+    renderPapers(); populatePaperDropdowns();
+  }
+
+  function deletePaper(id) {
+    if (!confirm('Delete this paper and all its questions?')) return;
+    Storage.deletePaper(id); renderPapers();
+  }
+
+  function editPaperQuestions(id) {
+    document.getElementById('aq-paper').value = id;
+    showPanel('add-question');
+  }
+
+  // ── ADD QUESTION ──
+  const optImgData = { A: null, B: null, C: null, D: null };
+  let qImgData = null, solImgData = null;
+
+  function previewImage(input, previewId) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById(previewId);
+      img.src = e.target.result; img.style.display='block';
+      if (previewId==='aq-img-preview') qImgData = e.target.result;
+      if (previewId==='aq-sol-preview') solImgData = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function previewOptImg(input, label) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { optImgData[label] = e.target.result; };
+    reader.readAsDataURL(file);
+  }
+
+  function onTypeChange() {
+    const type = document.getElementById('aq-type').value;
+    document.getElementById('options-section').style.display = type==='integer'?'none':'block';
+    document.getElementById('correct-scq').style.display = type==='scq'?'block':'none';
+    document.getElementById('correct-mcq').style.display = type==='mcq'?'block':'none';
+    document.getElementById('correct-integer').style.display = type==='integer'?'block':'none';
+  }
+
+  function addQuestion() {
+    const paperId = document.getElementById('aq-paper').value;
+    if (!paperId) { showMsg('aq-msg','Create a paper first.','error'); return; }
+    const paper = Storage.getPaper(paperId);
+    const body = document.getElementById('aq-body').value.trim();
+    if (!body) { showMsg('aq-msg','Question text is required.','error'); return; }
+    const type = document.getElementById('aq-type').value;
+    const subject = document.getElementById('aq-subject').value;
+
+    let correct = null;
+    if (type==='scq') correct = document.getElementById('aq-correct-scq').value;
+    else if (type==='mcq') {
+      correct = ['A','B','C','D'].filter(l=>document.getElementById('mcq-'+l).checked);
+      if(!correct.length) { showMsg('aq-msg','Select at least one correct option for MCQ.','error'); return; }
+    } else {
+      correct = document.getElementById('aq-correct-int').value.trim();
+      if(!correct) { showMsg('aq-msg','Enter the correct integer answer.','error'); return; }
+    }
+
+    const options = type!=='integer' ? ['A','B','C','D'].map(l=>document.getElementById('opt-'+l).value.trim()) : [];
+    const optionImages = type!=='integer' ? ['A','B','C','D'].map(l=>optImgData[l]||null) : [];
+
+    const q = {
+      id: Storage.generateId(), body, type, subject, correct,
+      options: type!=='integer' ? options : undefined,
+      optionImages: type!=='integer' ? optionImages : undefined,
+      image: qImgData || null,
+      solution: document.getElementById('aq-solution').value.trim() || null,
+      solutionImage: solImgData || null,
+    };
+
+    if (!paper.questions) paper.questions = [];
+    paper.questions.push(q);
+    Storage.savePaper(paper);
+    showMsg('aq-msg',`Question added! Total: ${paper.questions.length} questions.`,'success');
+
+    // Reset
+    document.getElementById('aq-body').value='';
+    document.getElementById('aq-solution').value='';
+    document.getElementById('aq-correct-int').value='';
+    ['A','B','C','D'].forEach(l=>{ document.getElementById('opt-'+l).value=''; optImgData[l]=null; document.getElementById('mcq-'+l).checked=false; });
+    qImgData=null; solImgData=null;
+    document.getElementById('aq-img-preview').style.display='none';
+    document.getElementById('aq-sol-preview').style.display='none';
+    renderQuestionList();
+  }
+
+  function renderQuestionList() {
+    const paperId = document.getElementById('aq-paper').value;
+    const container = document.getElementById('question-list-preview');
+    if (!paperId) { container.innerHTML=''; return; }
+    const paper = Storage.getPaper(paperId);
+    if (!paper || !paper.questions?.length) { container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No questions yet.</p>'; return; }
+    container.innerHTML = paper.questions.map((q,i)=>{
+      const subjClass = {physics:'subj-phy',chemistry:'subj-chem',mathematics:'subj-math'}[q.subject];
+      return `<div class="q-list-item">
+        <span class="q-list-num">Q${i+1}</span>
+        <div style="flex:1;">
+          <div class="q-list-body">${q.body.slice(0,100)}${q.body.length>100?'...':''}</div>
+          <div class="q-list-meta"><span class="subj-tag ${subjClass}">${q.subject.slice(0,4).toUpperCase()}</span> ${q.type.toUpperCase()} · Correct: ${Array.isArray(q.correct)?q.correct.join(','):q.correct}</div>
+        </div>
+        <button class="btn-small" style="background:#ef4444;" onclick="deleteQuestion('${paper.id}',${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function deleteQuestion(paperId, idx) {
+    if (!confirm('Delete this question?')) return;
+    const paper = Storage.getPaper(paperId);
+    paper.questions.splice(idx, 1);
+    Storage.savePaper(paper); renderQuestionList(); renderPapers();
+  }
+
+  // ── SETTINGS ──
+  function saveGsUrl() {
+    const url = document.getElementById('gs-url').value.trim();
+    const s = Storage.getSettings(); s.gsUrl = url;
+    Storage.saveSettings(s);
+    // Also update runtime
+    window.GS_WEBHOOK_URL = url;
+    showMsg('gs-msg','Saved! Scores will sync to Google Sheets.','success');
+  }
+  function changePass() {
+    const p = document.getElementById('new-pass').value.trim();
+    if (!p) return;
+    const s = Storage.getSettings(); s.adminPass = p;
+    Storage.saveSettings(s);
+    showMsg('pass-msg','Password updated.','success');
+  }
+
+  function showMsg(id, msg, type='success') {
+    const el = document.getElementById(id);
+    el.innerHTML = `<div class="${type==='success'?'success':'notice'}">${msg}</div>`;
+    setTimeout(()=>el.innerHTML='', 4000);
+  }
+</script>
+</body>
+</html>
