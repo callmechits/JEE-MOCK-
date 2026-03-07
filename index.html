@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>r/JEEAdv26dailyupdates — Mock Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --border: #1e2d40;
+    --accent: #00c2ff;
+    --accent2: #ff6b35;
+    --gold: #ffd700;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --phy: #3b82f6;
+    --chem: #10b981;
+    --math: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  /* GRID BG */
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events:none;
+  }
+
+  nav {
+    position: sticky; top:0; z-index:100;
+    background: rgba(10,14,23,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 60px;
+  }
+  .nav-logo { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: -0.02em; }
+  .nav-logo span { color: var(--accent2); }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; letter-spacing: 0.05em; text-transform: uppercase; }
+  .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+  .nav-reddit { display: flex; align-items: center; gap: 0.5rem; color: var(--accent2); font-size: 0.8rem; font-weight: 600; text-decoration: none; }
+
+  .hero {
+    position: relative; z-index:1;
+    padding: 5rem 2rem 3rem;
+    text-align: center;
+    max-width: 900px; margin: 0 auto;
+  }
+  .hero-tag { display: inline-block; background: rgba(0,194,255,0.1); border: 1px solid rgba(0,194,255,0.3); color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; padding: 0.3rem 1rem; border-radius: 2px; margin-bottom: 1.5rem; letter-spacing: 0.1em; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; line-height: 1.1; margin-bottom: 1rem; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto 2rem; line-height: 1.7; }
+  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 3px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit; }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { background: #33cfff; transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* STATS BAR */
+  .stats-bar {
+    position: relative; z-index:1;
+    display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+    margin: 0 2rem 3rem;
+    border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+    max-width: 700px; margin-left: auto; margin-right: auto;
+  }
+  .stat-item { flex: 1; min-width: 150px; padding: 1.25rem; text-align: center; border-right: 1px solid var(--border); }
+  .stat-item:last-child { border-right: none; }
+  .stat-num { font-family: 'IBM Plex Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
+
+  /* PAPERS */
+  .section { position: relative; z-index:1; max-width: 1100px; margin: 0 auto 4rem; padding: 0 2rem; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+  .section-title { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+  .section-title span { color: var(--accent); }
+
+  .papers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+  .paper-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem;
+    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .paper-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--phy), var(--chem), var(--math)); }
+  .paper-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .paper-card.live { border-color: var(--accent2); }
+  .paper-card.live::before { background: var(--accent2); animation: pulse-border 1.5s infinite; }
+  @keyframes pulse-border { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .paper-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .badge { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 2px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge-live { background: rgba(255,107,53,0.2); color: var(--accent2); border: 1px solid rgba(255,107,53,0.4); }
+  .badge-upcoming { background: rgba(0,194,255,0.1); color: var(--accent); border: 1px solid rgba(0,194,255,0.3); }
+  .badge-past { background: rgba(100,116,139,0.15); color: var(--muted); border: 1px solid var(--border); }
+  .paper-num { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+
+  .paper-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .paper-date { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+  .paper-stats { display: flex; gap: 1rem; }
+  .paper-stat { font-size: 0.78rem; color: var(--muted); }
+  .paper-stat strong { color: var(--text); }
+
+  .paper-action { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .paper-action-btn { font-size: 0.8rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .paper-action-btn.orange { color: var(--accent2); }
+
+  /* LEADERBOARD PREVIEW */
+  .leaderboard-preview { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .lb-header { display: grid; grid-template-columns: 50px 1fr 80px 80px 80px 100px; gap: 0; background: rgba(0,194,255,0.05); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; }
+  .lb-header span { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; }
+  .lb-header span:nth-child(2) { text-align: left; }
+  .lb-row { display: grid; grid-template-columns: 50px 1fr 80px 80px 80px 100px; gap:0; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.15s; }
+  .lb-row:hover { background: rgba(255,255,255,0.02); }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 700; text-align: center; }
+  .lb-rank.gold { color: var(--gold); }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name { font-weight: 500; font-size: 0.9rem; }
+  .lb-score { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; text-align: center; }
+  .lb-phy { color: var(--phy); }
+  .lb-chem { color: var(--chem); }
+  .lb-math { color: var(--math); }
+  .lb-total { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 700; text-align: center; color: var(--text); }
+
+  footer { position: relative; z-index:1; text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; }
+  footer a { color: var(--accent2); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">JEE<span>ADV</span>26</div>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="leaderboard.html">Leaderboard</a>
+    <a href="papers.html">All Papers</a>
+    <a href="admin.html">Admin</a>
+  </div>
+  <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank" class="nav-reddit">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 0C4.478 0 0 4.478 0 10c0 5.523 4.478 10 10 10 5.523 0 10-4.477 10-10C20 4.478 15.523 0 10 0zm6.894 10c0 .8-.65 1.45-1.45 1.45-.39 0-.744-.155-1.005-.41-.99.714-2.364 1.174-3.886 1.226l.66 3.1 2.137-.454c.04-.54.49-.966 1.044-.966.58 0 1.05.47 1.05 1.05 0 .58-.47 1.05-1.05 1.05-.44 0-.82-.274-.984-.664l-2.39.507c-.07.016-.14-.024-.16-.092l-.737-3.46c-1.546-.04-2.94-.5-3.94-1.22-.26.258-.617.417-1.01.417-.8 0-1.45-.65-1.45-1.45 0-.59.355-1.098.87-1.325-.022-.16-.033-.322-.033-.486 0-2.44 2.84-4.42 6.34-4.42 3.5 0 6.34 1.98 6.34 4.42 0 .164-.01.326-.033.487.514.226.867.733.867 1.324zM7.5 9.25c-.58 0-1.05.47-1.05 1.05 0 .58.47 1.05 1.05 1.05.58 0 1.05-.47 1.05-1.05 0-.58-.47-1.05-1.05-1.05zm5 0c-.58 0-1.05.47-1.05 1.05 0 .58.47 1.05 1.05 1.05.58 0 1.05-.47 1.05-1.05 0-.58-.47-1.05-1.05-1.05zm-2.5 3.5c-.69 0-1.33-.176-1.78-.46-.1-.063-.13-.196-.066-.296.062-.1.196-.13.296-.067.37.232.924.373 1.55.373s1.18-.14 1.55-.373c.1-.063.234-.033.296.067.063.1.033.233-.066.296-.45.284-1.09.46-1.78.46z"/></svg>
+    r/JEEAdv26dailyupdates
+  </a>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">// Community Mock Test Platform</div>
+  <h1>Practice like it's<br/><em>the real thing.</em></h1>
+  <p>Full 3-hour JEE Advanced mock papers from r/JEEAdv26dailyupdates. Timed interface, per-subject scoring, and community leaderboards.</p>
+  <div class="hero-btns">
+    <a href="papers.html" class="btn btn-primary">View All Mocks →</a>
+    <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num" id="stat-papers">0</div><div class="stat-label">Papers Released</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat-attempts">0</div><div class="stat-label">Total Attempts</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat-students">0</div><div class="stat-label">Students</div></div>
+</div>
+
+<!-- LIVE / UPCOMING -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title"><span>◉</span> Live & Upcoming</div>
+    <a href="papers.html" class="btn btn-secondary" style="padding:0.4rem 1rem;font-size:0.78rem;">View All</a>
+  </div>
+  <div class="papers-grid" id="live-papers"></div>
+</div>
+
+<!-- RECENT COMPLETED -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title"><span>//</span> Recent Papers</div>
+  </div>
+  <div class="papers-grid" id="recent-papers"></div>
+</div>
+
+<!-- LEADERBOARD PREVIEW -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title"><span>#</span> Top Performers — All Time</div>
+    <a href="leaderboard.html" class="btn btn-secondary" style="padding:0.4rem 1rem;font-size:0.78rem;">Full Board</a>
+  </div>
+  <div class="leaderboard-preview">
+    <div class="lb-header"><span>#</span><span>Student</span><span>PHY</span><span>CHEM</span><span>MATH</span><span>TOTAL</span></div>
+    <div id="lb-preview"></div>
+  </div>
+</div>
+
+<footer>
+  Built for <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank">r/JEEAdv26dailyupdates</a> · Honor system · Good luck with JEE 2026 🎯
+</footer>
+
+<script src="js/storage.js"></script>
+<script>
+  // Animate stats
+  function animateNum(el, target) {
+    let cur = 0; const step = Math.ceil(target/40);
+    const t = setInterval(()=>{ cur = Math.min(cur+step, target); el.textContent=cur; if(cur>=target) clearInterval(t); }, 40);
+  }
+  const papers = Storage.getPapers();
+  const attempts = Storage.getAllAttempts();
+  const students = [...new Set(attempts.map(a=>a.username))];
+  animateNum(document.getElementById('stat-papers'), papers.length);
+  animateNum(document.getElementById('stat-attempts'), attempts.length);
+  animateNum(document.getElementById('stat-students'), students.length);
+
+  // Render cards
+  function renderCard(p) {
+    const now = Date.now();
+    const start = new Date(p.startTime).getTime();
+    const end = new Date(p.endTime).getTime();
+    let status = 'upcoming', badge = 'badge-upcoming', badgeText = 'Upcoming', actionText = 'Details', actionClass='';
+    if(now >= start && now <= end) { status='live'; badge='badge-live'; badgeText='● LIVE'; actionText='Attempt Now'; actionClass='orange'; }
+    if(now > end) { status='past'; badge='badge-past'; badgeText='Completed'; actionText='View Results'; }
+    const pAttempts = attempts.filter(a=>a.paperId===p.id);
+    return `<a href="${status==='live'?'exam.html?id='+p.id:(status==='past'?'results.html?id='+p.id:'papers.html')}" class="paper-card ${status==='live'?'live':''}">
+      <div class="paper-meta"><span class="badge ${badge}">${badgeText}</span><span class="paper-num">Mock #${p.number||'?'}</span></div>
+      <div class="paper-title">${p.title}</div>
+      <div class="paper-date">${new Date(p.startTime).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · 3 Hours</div>
+      <div class="paper-stats">
+        <div class="paper-stat"><strong>${p.questions?.length||0}</strong> Qs</div>
+        <div class="paper-stat"><strong>${pAttempts.length}</strong> Attempts</div>
+        <div class="paper-stat"><strong>180</strong> Marks</div>
+      </div>
+      <div class="paper-action"><span class="paper-action-btn ${actionClass}">${actionText} →</span></div>
+    </a>`;
+  }
+
+  const now = Date.now();
+  const livePapers = papers.filter(p=>{ const s=new Date(p.startTime).getTime(),e=new Date(p.endTime).getTime(); return now>=s&&now<=e || now<s; }).slice(0,3);
+  const pastPapers = papers.filter(p=>now>new Date(p.endTime).getTime()).slice(-3).reverse();
+
+  document.getElementById('live-papers').innerHTML = livePapers.length ? livePapers.map(renderCard).join('') : '<p style="color:var(--muted);font-size:0.85rem;grid-column:1/-1;">No live or upcoming papers right now. Check back soon!</p>';
+  document.getElementById('recent-papers').innerHTML = pastPapers.length ? pastPapers.map(renderCard).join('') : '<p style="color:var(--muted);font-size:0.85rem;grid-column:1/-1;">No completed papers yet.</p>';
+
+  // Leaderboard preview
+  const lb = Storage.getOverallLeaderboard().slice(0,5);
+  const rankClass = ['gold','silver','bronze','',''];
+  document.getElementById('lb-preview').innerHTML = lb.length ? lb.map((e,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank ${rankClass[i]||''}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
+      <div class="lb-name">${e.username}</div>
+      <div class="lb-score lb-phy">${e.phy}</div>
+      <div class="lb-score lb-chem">${e.chem}</div>
+      <div class="lb-score lb-math">${e.math}</div>
+      <div class="lb-total">${e.total}</div>
+    </div>`).join('') : '<div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">No attempts yet. Be the first!</div>';
+</script>
+</body>
+</html>
