@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Results — JEEAdv26</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0e17;--surface:#111827;--border:#1e2d40;--accent:#00c2ff;--accent2:#ff6b35;--text:#e2e8f0;--muted:#64748b;--phy:#3b82f6;--chem:#10b981;--math:#f59e0b;--correct:#22c55e;--wrong:#ef4444;--partial:#f59e0b;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;}
+  nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
+  .nav-logo span{color:var(--accent2);}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;margin-left:1.5rem;}
+  .nav-links a:hover{color:var(--accent);}
+  .main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:2rem;}
+
+  /* SCORE CARD */
+  .score-hero{text-align:center;padding:3rem 2rem 2rem;margin-bottom:2rem;}
+  .score-hero h2{font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;}
+  .big-score{font-family:'IBM Plex Mono',monospace;font-size:4rem;font-weight:700;line-height:1;color:var(--accent);margin-bottom:0.25rem;}
+  .score-denom{font-size:1rem;color:var(--muted);}
+  .score-user{font-size:1.1rem;font-weight:600;margin:0.75rem 0;}
+
+  .subject-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+  .subj-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;text-align:center;}
+  .subj-card-title{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.5rem;}
+  .subj-card-score{font-family:'IBM Plex Mono',monospace;font-size:2rem;font-weight:700;}
+  .subj-card-meta{font-size:0.78rem;color:var(--muted);margin-top:0.25rem;}
+  .phy-c{color:var(--phy);border-top:3px solid var(--phy);}
+  .chem-c{color:var(--chem);border-top:3px solid var(--chem);}
+  .math-c{color:var(--math);border-top:3px solid var(--math);}
+
+  /* LEADERBOARD POSITION */
+  .rank-banner{background:linear-gradient(135deg,rgba(0,194,255,0.1),rgba(255,107,53,0.1));border:1px solid var(--border);border-radius:6px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
+  .rank-info{font-size:0.85rem;color:var(--muted);}
+  .rank-info strong{color:var(--text);font-size:1.1rem;}
+  .rank-num{font-family:'IBM Plex Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--gold);}
+
+  /* SOLUTIONS */
+  .section-title{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);}
+  .section-title span{color:var(--accent);}
+
+  .q-review{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;}
+  .q-review-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;}
+  .q-num-badge{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:var(--border);}
+  .result-badge{font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:3px;}
+  .rb-correct{background:rgba(34,197,94,0.15);color:var(--correct);}
+  .rb-wrong{background:rgba(239,68,68,0.15);color:var(--wrong);}
+  .rb-partial{background:rgba(245,158,11,0.15);color:var(--partial);}
+  .rb-skipped{background:rgba(100,116,139,0.15);color:var(--muted);}
+  .q-body-text{font-size:0.88rem;line-height:1.7;margin-bottom:0.75rem;}
+  .q-body-text img{max-width:100%;border-radius:4px;margin:0.5rem 0;}
+
+  .ans-row{display:flex;gap:0.5rem;flex-wrap:wrap;font-size:0.82rem;margin-bottom:0.5rem;}
+  .ans-label{color:var(--muted);}
+  .ans-val{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+  .ans-correct{color:var(--correct);}
+  .ans-wrong{color:var(--wrong);}
+
+  .solution-box{background:#0f172a;border:1px solid var(--border);border-radius:4px;padding:1rem;margin-top:0.75rem;font-size:0.85rem;line-height:1.7;color:var(--muted);}
+  .solution-box img{max-width:100%;border-radius:4px;margin-top:0.5rem;}
+  .solution-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);font-weight:700;margin-bottom:0.4rem;}
+
+  .subj-group-title{font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:0.5rem 0;margin:1rem 0 0.5rem;border-bottom:1px solid var(--border);}
+  .subj-group-title.phy{color:var(--phy);}
+  .subj-group-title.chem{color:var(--chem);}
+  .subj-group-title.math{color:var(--math);}
+
+  .btn-link{display:inline-flex;align-items:center;gap:0.5rem;padding:0.65rem 1.25rem;background:var(--accent);color:var(--bg);border-radius:4px;font-weight:700;font-size:0.85rem;text-decoration:none;margin-right:0.75rem;}
+  .btn-link-sec{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn-link-sec:hover{border-color:var(--accent);color:var(--accent);}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">JEE<span>ADV</span>26</div>
+  <div class="nav-links">
+    <a href="index.html">← Home</a>
+    <a href="leaderboard.html">Leaderboard</a>
+  </div>
+</nav>
+
+<div class="main" id="main-content">
+  <div style="text-align:center;padding:4rem;color:var(--muted);">Loading results...</div>
+</div>
+
+<script src="js/storage.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const paperId = params.get('id');
+  const attemptId = params.get('attempt');
+
+  async function init() {
+    await Storage.pullFromSheets();
+    const paper = Storage.getPaper(paperId);
+    if (!paper) { document.getElementById('main-content').innerHTML='<p style="color:var(--muted);padding:2rem;">Paper not found.</p>'; return; }
+
+    const now = Date.now();
+    const isEnded = now > new Date(paper.endTime).getTime();
+
+    // Get attempt
+    let attempt = attemptId ? Storage.getAllAttempts().find(a=>a.id===attemptId) : null;
+
+    const main = document.getElementById('main-content');
+
+    if (!attempt) {
+      // Public results view — show leaderboard only
+      main.innerHTML = renderPublicResults(paper);
+      return;
+    }
+
+    // Personal results
+    const scores = attempt.scores || Storage.scoreAttempt(attempt, paper);
+    const lb = Storage.getPaperLeaderboard(paperId);
+    const rank = lb.findIndex(e=>e.username.toLowerCase()===attempt.username.toLowerCase())+1;
+
+    main.innerHTML = `
+      <div class="score-hero">
+        <div><h2>Your Score</h2></div>
+        <div class="big-score">${scores.total}</div>
+        <div class="score-denom">out of ~${getMaxMarks(paper)} marks</div>
+        <div class="score-user">${attempt.username}</div>
+      </div>
+      <div class="subject-cards">
+        <div class="subj-card phy-c"><div class="subj-card-title">Physics</div><div class="subj-card-score">${scores.phy}</div><div class="subj-card-meta">PHY</div></div>
+        <div class="subj-card chem-c"><div class="subj-card-title">Chemistry</div><div class="subj-card-score">${scores.chem}</div><div class="subj-card-meta">CHEM</div></div>
+        <div class="subj-card math-c"><div class="subj-card-title">Mathematics</div><div class="subj-card-score">${scores.math}</div><div class="subj-card-meta">MATH</div></div>
+      </div>
+      ${rank>0?`<div class="rank-banner">
+        <div class="rank-info">Your rank in <strong>${paper.title}</strong><br/>${lb.length} total submissions</div>
+        <div class="rank-num">#${rank}</div>
+      </div>`:''}
+      <div style="margin-bottom:2rem;">
+        <a href="leaderboard.html" class="btn-link">View Full Leaderboard →</a>
+        <a href="papers.html" class="btn-link btn-link-sec">All Papers</a>
+      </div>
+      ${isEnded ? renderSolutions(paper, attempt) : `<div style="background:rgba(0,194,255,0.05);border:1px solid rgba(0,194,255,0.2);border-radius:6px;padding:1.5rem;text-align:center;color:var(--muted);font-size:0.9rem;">Solutions will be revealed after the exam window closes.</div>`}
+    `;
+  }
+
+  function getMaxMarks(paper) {
+    let m = 0;
+    paper.questions?.forEach(q=>{ m += q.type==='scq'?3:q.type==='mcq'?4:3; });
+    return m;
+  }
+
+  function renderSolutions(paper, attempt) {
+    const subjects = ['physics','chemistry','mathematics'];
+    const subjectLabel = {physics:'Physics',chemistry:'Chemistry',mathematics:'Mathematics'};
+    const subjectClass = {physics:'phy',chemistry:'chem',mathematics:'math'};
+    let html = '<div class="section-title"><span>//</span> Question-wise Analysis</div>';
+    subjects.forEach(subj => {
+      const qs = paper.questions.filter(q=>q.subject===subj);
+      if (!qs.length) return;
+      html += `<div class="subj-group-title ${subjectClass[subj]}">${subjectLabel[subj]}</div>`;
+      qs.forEach((q, i) => {
+        const globalIdx = paper.questions.findIndex(pq=>pq.id===q.id);
+        const userAns = attempt.answers?.[q.id];
+        const marks = Storage.calcMarks(q, userAns);
+        const hasAns = Array.isArray(userAns)?userAns.length>0:(userAns!==null&&userAns!==undefined&&userAns!=='');
+        let resultClass, resultText;
+        if (!hasAns) { resultClass='rb-skipped'; resultText='Skipped'; }
+        else if (marks > 0 && marks === (q.type==='scq'?3:q.type==='mcq'?4:3)) { resultClass='rb-correct'; resultText=`+${marks} Correct`; }
+        else if (marks > 0) { resultClass='rb-partial'; resultText=`+${marks} Partial`; }
+        else if (marks < 0) { resultClass='rb-wrong'; resultText=`${marks} Wrong`; }
+        else { resultClass='rb-skipped'; resultText='0 (No marks)'; }
+
+        const userAnsDisplay = Array.isArray(userAns) ? userAns.join(', ') : (userAns ?? '—');
+        const correctDisplay = Array.isArray(q.correct) ? q.correct.join(', ') : q.correct;
+
+        html += `<div class="q-review">
+          <div class="q-review-header">
+            <span class="q-num-badge">Q${globalIdx+1}</span>
+            <span class="result-badge ${resultClass}">${resultText}</span>
+            <span style="font-size:0.72rem;color:var(--muted);">${q.type.toUpperCase()}</span>
+          </div>
+          <div class="q-body-text">${q.body}${q.image?`<br><img src="${q.image}"/>`:''}  </div>
+          <div class="ans-row">
+            <span class="ans-label">Your answer:</span>
+            <span class="ans-val ${hasAns?(marks>0?'ans-correct':'ans-wrong'):'ans-wrong'}">${userAnsDisplay}</span>
+            <span class="ans-label" style="margin-left:1rem;">Correct:</span>
+            <span class="ans-val ans-correct">${correctDisplay}</span>
+          </div>
+          ${q.solution||q.solutionImage?`<div class="solution-box"><div class="solution-label">Solution</div>${q.solution||''}${q.solutionImage?`<img src="${q.solutionImage}"/>`:''}  </div>`:''}
+        </div>`;
+      });
+    });
+    return html;
+  }
+
+  function renderPublicResults(paper) {
+    const lb = Storage.getPaperLeaderboard(paperId);
+    return `<div style="margin-bottom:2rem;"><h1 style="font-size:1.5rem;">${paper.title}</h1><p style="color:var(--muted);margin-top:0.5rem;font-size:0.85rem;">Results — ${lb.length} submissions</p></div>
+    ${lb.length?`<table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <thead><tr style="background:rgba(0,194,255,0.05);border-bottom:1px solid var(--border);">
+        <th style="padding:0.75rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;color:var(--muted);">#</th>
+        <th style="padding:0.75rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;color:var(--muted);">Student</th>
+        <th style="padding:0.75rem;text-align:center;font-size:0.65rem;text-transform:uppercase;color:var(--phy);">PHY</th>
+        <th style="padding:0.75rem;text-align:center;font-size:0.65rem;text-transform:uppercase;color:var(--chem);">CHEM</th>
+        <th style="padding:0.75rem;text-align:center;font-size:0.65rem;text-transform:uppercase;color:var(--math);">MATH</th>
+        <th style="padding:0.75rem;text-align:center;font-size:0.65rem;text-transform:uppercase;color:var(--text);">TOTAL</th>
+      </tr></thead>
+      <tbody>${lb.map((e,i)=>`<tr style="border-bottom:1px solid rgba(30,45,64,0.5);">
+        <td style="padding:0.75rem 1rem;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--muted);">${i+1}</td>
+        <td style="padding:0.75rem 1rem;font-weight:600;">${e.username}</td>
+        <td style="padding:0.75rem;text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--phy);">${e.phy}</td>
+        <td style="padding:0.75rem;text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--chem);">${e.chem}</td>
+        <td style="padding:0.75rem;text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--math);">${e.math}</td>
+        <td style="padding:0.75rem;text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;">${e.total}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<p style="color:var(--muted);text-align:center;padding:3rem;">No submissions yet.</p>'}
+    <div style="margin-top:1.5rem;"><a href="index.html" style="color:var(--accent);text-decoration:none;font-size:0.85rem;">← Back to Home</a></div>`;
+  }
+
+  init();
+</script>
+</body>
+</html>
