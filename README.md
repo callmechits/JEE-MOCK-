@@ -78,6 +78,14 @@ git push -u origin main
 4. Open **Admin** and login using your Apps Script admin password.
 5. Done! All scores now sync to your Google Sheet for all users.
 
+### Step 5 — First Admin Login + Password Reset
+1. Open `admin.html` on your live site and login using default password: `admin123`
+2. Admin password is hardcoded in `admin.html` as `LOCAL_ADMIN_PASSWORD` (edit it and redeploy if needed)
+3. If you forget it later, open Apps Script editor and run:
+   ```javascript
+   adminSetPasswordForSetup('your-new-password')  // only if using Apps Script password mode
+   ```
+
 ---
 
 ## 📝 How to Create a Mock Paper
