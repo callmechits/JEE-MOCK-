@@ -73,17 +73,17 @@ git push -u origin main
 
 ### Step 4 — Connect to the Website
 1. Go to your site → **Admin** page
-2. Enter admin password (default: `admin123`, change this!)
-3. Go to **Settings & GSheets**
-4. Paste the Web App URL → **Save**
-5. Done! All scores now sync to your Google Sheet.
+2. Open `js/config.js` in this repo and set `window.GS_WEBHOOK_URL` to your Web App URL.
+3. Deploy/update the site files.
+4. Open **Admin** and login using your Apps Script admin password.
+5. Done! All scores now sync to your Google Sheet for all users.
 
 ---
 
 ## 📝 How to Create a Mock Paper
 
 1. Go to `yoursite.github.io/jeeadv26/admin.html`
-2. Login with password (`admin123` by default)
+2. Login with your Apps Script admin password
 3. **Create Paper** → Enter title, start time, end time → Create
 4. **Add Question** → Select paper → Add questions one by one:
    - Type the question text (supports basic HTML for formatting)
@@ -117,7 +117,8 @@ jeeadv26/
 ├── papers.html         # All papers list
 ├── admin.html          # Admin panel (create papers, add questions)
 ├── js/
-│   └── storage.js      # Data layer (localStorage + Google Sheets)
+│   ├── config.js       # Shared public config (Apps Script URL)
+│   └── storage.js      # Data layer (localStorage cache + Google Sheets backend)
 └── google-apps-script.js  # Paste this in Google Apps Script
 ```
 
@@ -130,7 +131,7 @@ jeeadv26/
 - Supports SCQ, MCQ, Integer question types
 - Add solutions (revealed after deadline)
 - Delete questions or entire papers
-- Change admin password
+- Change admin password (server-side, not exposed in browser storage)
 - Configure Google Sheets URL
 
 ---
@@ -138,8 +139,8 @@ jeeadv26/
 ## 🔒 Security Notes
 
 - **Honor system** — username only, no login required for students
-- Admin panel protected by password (change the default `admin123`!)
-- All data stored in browser localStorage + Google Sheets
+- Admin auth is validated server-side via Apps Script (no plaintext password in browser storage)
+- Data is cached in browser localStorage and persisted in Google Sheets
 - No server costs — 100% free hosting
 
 ---
@@ -148,7 +149,7 @@ jeeadv26/
 
 - **Set end time to midnight IST** so everyone has a fair window
 - **Post the link on Reddit** with a countdown
-- **Change admin password** immediately from Settings
+- **Change admin password** from Admin → Settings after first login
 - Images are stored as base64 in the data — keep them under 1MB each for best performance
 - The site works offline once loaded (localStorage cache)
 
