@@ -2,40 +2,93 @@
 // Uses localStorage as cache + Google Sheets as backend
 
 const Storage = (() => {
-
-  // ── CONFIG ──────────────────────────────────────────────────
-  // After deploying Google Apps Script, paste your Web App URL here:
-  const GS_URL = window.GS_WEBHOOK_URL || '';
-  // ────────────────────────────────────────────────────────────
-
-  const KEYS = { papers: 'jeeadv_papers', attempts: 'jeeadv_attempts', settings: 'jeeadv_settings' };
+  const KEYS = {
+    papers: 'jeeadv_papers',
+    attempts: 'jeeadv_attempts',
+    settings: 'jeeadv_settings',
+    adminSession: 'jeeadv_admin_session'
+  };
 
   function get(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
   function set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
+  function getSettings() { return get(KEYS.settings) || {}; }
+  function saveSettings(s) { set(KEYS.settings, s || {}); }
+
+  function getGsUrl() {
+    return (window.GS_WEBHOOK_URL || getSettings().gsUrl || '').trim();
+  }
+
+  function getAdminSession() {
+    const session = get(KEYS.adminSession);
+    if (!session?.token || !session?.expiresAt) return null;
+    if (Date.now() > session.expiresAt) {
+      localStorage.removeItem(KEYS.adminSession);
+      return null;
+    }
+    return session;
+  }
+
+  function setAdminSession(session) {
+    if (!session) localStorage.removeItem(KEYS.adminSession);
+    else set(KEYS.adminSession, session);
+  }
+
+  async function apiGet(action) {
+    const url = getGsUrl();
+    if (!url) throw new Error('Google Apps Script URL is not configured.');
+    const res = await fetch(`${url}?action=${encodeURIComponent(action)}`);
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    return res.json();
+  }
+
+  async function apiPost(action, data = {}, opts = {}) {
+    const url = getGsUrl();
+    if (!url) throw new Error('Google Apps Script URL is not configured.');
+    const payload = { action, data, ts: Date.now() };
+    if (opts.withAdminToken) {
+      const session = getAdminSession();
+      if (!session?.token) throw new Error('Admin login required.');
+      payload.adminToken = session.token;
+    }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.error) throw new Error(json.error || `Request failed: ${res.status}`);
+    return json;
+  }
+
   // ── PAPERS ───────────────────────────────────────────────────
   function getPapers() { return get(KEYS.papers) || []; }
-  function savePaper(paper) {
+  async function savePaper(paper) {
     const papers = getPapers();
     const idx = papers.findIndex(p => p.id === paper.id);
     if (idx >= 0) papers[idx] = paper; else papers.push(paper);
     set(KEYS.papers, papers);
-    syncToSheets('SAVE_PAPER', paper);
+    await apiPost('SAVE_PAPER', paper, { withAdminToken: true });
     return paper;
   }
   function getPaper(id) { return getPapers().find(p => p.id === id) || null; }
-  function deletePaper(id) {
+  async function deletePaper(id) {
     set(KEYS.papers, getPapers().filter(p => p.id !== id));
+    await apiPost('DELETE_PAPER', { id }, { withAdminToken: true });
   }
 
   // ── ATTEMPTS ────────────────────────────────────────────────
   function getAllAttempts() { return get(KEYS.attempts) || []; }
-  function saveAttempt(attempt) {
+  async function saveAttempt(attempt) {
     const all = getAllAttempts();
     const idx = all.findIndex(a => a.id === attempt.id);
     if (idx >= 0) all[idx] = attempt; else all.push(attempt);
     set(KEYS.attempts, all);
-    syncToSheets('SAVE_ATTEMPT', attempt);
+    try {
+      await apiPost('SAVE_ATTEMPT', attempt);
+    } catch (e) {
+      console.warn('Sheets sync failed:', e.message);
+    }
     return attempt;
   }
   function getAttemptsForPaper(paperId) { return getAllAttempts().filter(a => a.paperId === paperId); }
@@ -61,10 +114,7 @@ const Storage = (() => {
   }
 
   function getOverallLeaderboard() {
-    const attempts = getAllAttempts().filter(a => a.submitted);
-    const byUser = {};
-    attempts.forEach(a => {
-      const u = a.username.toLowerCase();
+@@ -68,91 +121,90 @@ const Storage = (() => {
       if (!byUser[u]) byUser[u] = { username: a.username, phy: 0, chem: 0, math: 0, total: 0, count: 0 };
       byUser[u].phy += (a.scores?.phy || 0);
       byUser[u].chem += (a.scores?.chem || 0);
@@ -90,58 +140,56 @@ const Storage = (() => {
   }
 
   function calcMarks(q, ans) {
-    if (q.type === 'scq') {
-      return ans === q.correct ? 3 : -1;
-    }
+    if (q.type === 'scq') return ans === q.correct ? 3 : -1;
     if (q.type === 'mcq') {
-      // ans is array of selected options
       const selected = Array.isArray(ans) ? ans : [ans];
       const correct = Array.isArray(q.correct) ? q.correct : [q.correct];
       if (selected.length === 0) return 0;
       const allCorrect = correct.every(c => selected.includes(c)) && selected.every(s => correct.includes(s));
       if (allCorrect) return 4;
-      const hasWrong = selected.some(s => !correct.includes(s));
-      if (hasWrong) return -2;
-      // partial: all selected are correct but not all correct chosen
-      const partialScore = Math.floor(4 * selected.filter(s => correct.includes(s)).length / correct.length);
-      return partialScore;
+      if (selected.some(s => !correct.includes(s))) return -2;
+      return Math.floor(4 * selected.filter(s => correct.includes(s)).length / correct.length);
     }
     if (q.type === 'integer') {
-      const userVal = parseFloat(ans);
-      const correctVal = parseFloat(q.correct);
+      const userVal = parseFloat(ans), correctVal = parseFloat(q.correct);
       if (isNaN(userVal)) return 0;
       return Math.abs(userVal - correctVal) < 0.01 ? 3 : 0;
     }
     return 0;
   }
 
-  // ── SYNC TO GOOGLE SHEETS ───────────────────────────────────
+  // ── SYNC/PULL ───────────────────────────────────────────────
   async function syncToSheets(action, data) {
-    if (!GS_URL) return;
-    try {
-      await fetch(GS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, data, ts: Date.now() })
-      });
-    } catch (e) { console.warn('Sheets sync failed (offline?):', e.message); }
+    if (action === 'SAVE_ATTEMPT') return saveAttempt(data);
+    if (action === 'SAVE_PAPER') return savePaper(data);
+    return apiPost(action, data);
   }
 
-  // Pull attempts from Sheets (call on page load for live data)
   async function pullFromSheets() {
-    if (!GS_URL) return;
     try {
-      const res = await fetch(GS_URL + '?action=GET_ALL');
-      const json = await res.json();
+      const json = await apiGet('GET_ALL');
       if (json.papers) set(KEYS.papers, json.papers);
       if (json.attempts) set(KEYS.attempts, json.attempts);
-    } catch (e) { console.warn('Sheets pull failed:', e.message); }
+    } catch (e) {
+      console.warn('Sheets pull failed:', e.message);
+    }
   }
 
-  // ── SETTINGS ─────────────────────────────────────────────────
-  function getSettings() { return get(KEYS.settings) || { adminPass: 'admin123' }; }
-  function saveSettings(s) { set(KEYS.settings, s); }
+  // ── ADMIN AUTH ───────────────────────────────────────────────
+  async function adminLogin(password) {
+    const result = await apiPost('ADMIN_LOGIN', { password });
+    if (!result?.token) throw new Error('Login failed');
+    setAdminSession({ token: result.token, expiresAt: result.expiresAt || Date.now() + 12 * 60 * 60 * 1000 });
+    return true;
+  }
+
+  function adminLogout() { setAdminSession(null); }
+  function isAdminLoggedIn() { return !!getAdminSession(); }
+
+  async function adminChangePassword(newPassword) {
+    await apiPost('ADMIN_CHANGE_PASSWORD', { newPassword }, { withAdminToken: true });
+    return true;
+  }
 
   // ── UTILS ─────────────────────────────────────────────────────
   function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -153,6 +201,7 @@ const Storage = (() => {
     scoreAttempt, calcMarks,
     syncToSheets, pullFromSheets,
     getSettings, saveSettings,
+    adminLogin, adminLogout, isAdminLoggedIn, adminChangePassword,
     generateId
   };
 })();
