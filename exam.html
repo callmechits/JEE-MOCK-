@@ -206,7 +206,7 @@
     </div>
   </div>
 </div>
-<script src="js/config.js"></script>
+
 <script src="js/storage.js"></script>
 <script>
   const params = new URLSearchParams(location.search);
@@ -219,7 +219,7 @@
   // ── INIT ────────────────────────────────────────────────────
   window.onload = async () => {
     await Storage.pullFromSheets();
-    paper = Storage.getPaper(paperId);
+    paper = await Storage.getPaper(paperId);
     if (!paper) { alert('Paper not found!'); location.href='index.html'; return; }
     // Check if exam window is open
     const now = Date.now();
@@ -244,7 +244,7 @@
     if (!val) { document.getElementById('username-input').style.borderColor='#ef4444'; return; }
     username = val;
     // Load or create attempt
-    attempt = Storage.getUserAttempt(paperId, username);
+    attempt = await Storage.getUserAttempt(paperId, username);
     if (attempt && attempt.submitted) { alert('You have already submitted this paper!'); location.href=`results.html?id=${paperId}`; return; }
     if (!attempt) {
       attempt = { id: Storage.generateId(), paperId, username, startedAt: Date.now(), submitted: false, answers: {}, states: {}, scores: null };
@@ -404,7 +404,7 @@
   function autoSave() {
     attempt.answers = answers;
     attempt.states = states;
-    Storage.saveAttempt(attempt);
+    await Storage.saveAttempt(attempt);
   }
 
   // ── SIDEBAR ──────────────────────────────────────────────────
@@ -451,7 +451,7 @@
     attempt.submitted = true;
     attempt.submittedAt = Date.now();
     attempt.scores = Storage.scoreAttempt(attempt, paper);
-    Storage.saveAttempt(attempt);
+    await Storage.saveAttempt(attempt);
     clearInterval(timerInterval);
     location.href = `results.html?id=${paperId}&attempt=${attempt.id}`;
   }
