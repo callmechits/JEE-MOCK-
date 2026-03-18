@@ -366,6 +366,32 @@
         <button class="btn-primary" onclick="changePass()">Update Password</button>
         <div id="pass-msg" style="margin-top:0.5rem;"></div>
       </div>
+
+      <!-- DANGER ZONE -->
+      <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:1.5rem;">
+        <div style="font-weight:700;color:#ef4444;margin-bottom:0.2rem;font-size:0.9rem;">🧨 Danger Zone</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem;">For testing only. Remove this section before going live.</div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;">Delete all attempts</div>
+              <div style="font-size:0.72rem;color:var(--muted);">Clears all scores and leaderboard. Papers stay intact.</div>
+            </div>
+            <button onclick="flushAttempts()" style="background:#ef4444;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Delete Attempts</button>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;">Full reset — delete everything</div>
+              <div style="font-size:0.72rem;color:var(--muted);">Wipes all papers AND attempts from the database.</div>
+            </div>
+            <button onclick="flushAll()" style="background:#7f1d1d;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Full Reset</button>
+          </div>
+
+        </div>
+        <div id="flush-msg" style="margin-top:0.75rem;"></div>
+      </div>
     </div>
 
   </div>
@@ -383,8 +409,8 @@ function doLogin(){
   }else{document.getElementById('login-err').style.display='block';}
 }
 
-function init(){
-  renderPapers();populatePaperDropdown();
+async function init(){
+  await renderPapers();await populatePaperDropdown();
   // Prefill Supabase fields
   const sbUrl=localStorage.getItem('jee_sb_url')||'';
   const sbAnon=localStorage.getItem('jee_sb_anon')||'';
@@ -403,13 +429,13 @@ function init(){
   document.getElementById('cp-end').value=fmt(end);
 }
 
-function showPanel(name){
+async function showPanel(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  if(name==='add-question'){populatePaperDropdown();renderQuestionList();}
-  if(name==='papers')renderPapers();
+  if(name==='add-question'){await populatePaperDropdown();}
+  if(name==='papers')await renderPapers();
 }
 
 function setSubject(subj,el){currentSubject=subj;document.querySelectorAll('.subj-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
@@ -508,53 +534,66 @@ document.addEventListener('keydown',e=>{
 });
 
 // PAPERS
-function renderPapers(){
-  const papers=Storage.getPapers();
+async function renderPapers(){
   const container=document.getElementById('papers-list');
-  if(!papers.length){container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet.</p>';return;}
-  container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Window</th><th>Questions</th><th>Attempts</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
-    const att=Storage.getAttemptsForPaper(p.id).length;
+  container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">Loading...</p>';
+  const papers=await Storage.getPapers();
+  if(!papers.length){container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet. Create one!</p>';return;}
+  container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Window</th><th>Questions</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
     const s=new Date(p.startTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
     const e2=new Date(p.endTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
-    return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td><td><strong>${p.title}</strong></td><td style="font-size:0.78rem;color:var(--muted);">${s} to ${e2}</td><td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td><td style="font-family:'IBM Plex Mono',monospace;">${att}</td><td><div style="display:flex;gap:0.4rem;"><button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button><button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button></div></td></tr>`;
+    return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td><td><strong>${p.title}</strong></td><td style="font-size:0.78rem;color:var(--muted);">${s} → ${e2}</td><td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td><td><div style="display:flex;gap:0.4rem;"><button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button><button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button></div></td></tr>`;
   }).join('')}</tbody></table>`;
 }
-function populatePaperDropdown(){
-  const papers=Storage.getPapers();
+async function populatePaperDropdown(){
+  const papers=await Storage.getPapers();
   const sel=document.getElementById('aq-paper');
   const prev=sel.value;
-  sel.innerHTML=papers.length?papers.map(p=>`<option value="${p.id}">${p.title}</option>`).join(''):'<option value="">No papers yet</option>';
+  sel.innerHTML=papers.length?papers.map(p=>`<option value="${p.id}">${p.title}</option>`).join(''):'<option value="">No papers yet — create one first</option>';
   if(prev&&papers.find(p=>p.id===prev))sel.value=prev;
-  renderQuestionList();onPaperChange();
+  await renderQuestionList();
+  await onPaperChange();
 }
-function onPaperChange(){
-  renderQuestionList();
+async function onPaperChange(){
   const paperId=document.getElementById('aq-paper').value;
-  const paper=paperId?Storage.getPaper(paperId):null;
+  const paper=paperId?await Storage.getPaper(paperId):null;
   const cnt=paper?.questions?.length||0;
   const el=document.getElementById('paper-q-count');
   if(el)el.textContent=cnt?`${cnt} question${cnt!==1?'s':''} so far`:'';
+  await renderQuestionList();
 }
-function createPaper(){
+async function createPaper(){
   const title=document.getElementById('cp-title').value.trim();
   const start=document.getElementById('cp-start').value;
   const end=document.getElementById('cp-end').value;
   if(!title||!start||!end){showMsg('cp-msg','Fill title, start and end time.','error');return;}
   if(new Date(end)<=new Date(start)){showMsg('cp-msg','End must be after start.','error');return;}
-  const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:Storage.getPapers().length+1,createdAt:Date.now()};
-  Storage.savePaper(paper);
-  showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
-  document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
-  renderPapers();populatePaperDropdown();
+  const btn=document.querySelector('#panel-create-paper .btn-primary');
+  btn.disabled=true;btn.textContent='Saving...';
+  try {
+    const papers=await Storage.getPapers();
+    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:Date.now()};
+    await Storage.savePaper(paper);
+    showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
+    document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
+    await renderPapers();await populatePaperDropdown();
+  } catch(e) {
+    showMsg('cp-msg',`Error: ${e.message}`,'error');
+  } finally {
+    btn.disabled=false;btn.textContent='Create Paper';
+  }
 }
-function deletePaper(id){if(!confirm('Delete this paper?'))return;Storage.deletePaper(id);renderPapers();populatePaperDropdown();}
+async function deletePaper(id){
+  if(!confirm('Delete this paper?'))return;
+  await Storage.deletePaper(id);
+  await renderPapers();await populatePaperDropdown();
+}
 function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-paper').value=id;onPaperChange();}
 
 // ADD QUESTION
-function addQuestion(){
+async function addQuestion(){
   const paperId=document.getElementById('aq-paper').value;
   if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
-  const paper=Storage.getPaper(paperId);
   const body=document.getElementById('aq-body').value.trim();
   if(!body&&!imgStore.question){showMsg('aq-msg','Add question text or image.','error');return;}
   let correct=null;
@@ -566,15 +605,24 @@ function addQuestion(){
     if(!selectedCorrect.length){showMsg('aq-msg','Select the correct answer.','error');return;}
     correct=currentType==='scq'?selectedCorrect[0]:[...selectedCorrect];
   }
-  const options=['A','B','C','D'].map(l=>document.getElementById(`opt-${l}`).value.trim());
-  const optionImages=['A','B','C','D'].map(l=>imgStore[`opt${l}`]||null);
-  const q={id:Storage.generateId(),body,type:currentType,subject:currentSubject,correct,options:currentType!=='integer'?options:undefined,optionImages:currentType!=='integer'?optionImages:undefined,image:imgStore.question||null,solution:document.getElementById('aq-solution').value.trim()||null,solutionImage:imgStore.solution||null};
-  if(!paper.questions)paper.questions=[];
-  paper.questions.push(q);
-  Storage.savePaper(paper);
-  showMsg('aq-msg',`Q${paper.questions.length} added (${currentSubject}, ${currentType.toUpperCase()}).`,'success');
-  resetForm();renderQuestionList();onPaperChange();
-  setTimeout(()=>document.getElementById('aq-body').focus(),100);
+  const btn=document.getElementById('btn-add-q');
+  btn.disabled=true;btn.textContent='Saving...';
+  try {
+    const paper=await Storage.getPaper(paperId);
+    const options=['A','B','C','D'].map(l=>document.getElementById(`opt-${l}`).value.trim());
+    const optionImages=['A','B','C','D'].map(l=>imgStore[`opt${l}`]||null);
+    const q={id:Storage.generateId(),body,type:currentType,subject:currentSubject,correct,options:currentType!=='integer'?options:undefined,optionImages:currentType!=='integer'?optionImages:undefined,image:imgStore.question||null,solution:document.getElementById('aq-solution').value.trim()||null,solutionImage:imgStore.solution||null};
+    if(!paper.questions)paper.questions=[];
+    paper.questions.push(q);
+    await Storage.savePaper(paper);
+    showMsg('aq-msg',`Q${paper.questions.length} saved (${currentSubject}, ${currentType.toUpperCase()}).`,'success');
+    resetForm();await renderQuestionList();await onPaperChange();
+    setTimeout(()=>document.getElementById('aq-body').focus(),100);
+  } catch(e) {
+    showMsg('aq-msg',`Error saving: ${e.message}`,'error');
+  } finally {
+    btn.disabled=false;btn.textContent='Save Question & Next';
+  }
 }
 
 function resetForm(){
@@ -598,12 +646,12 @@ function resetForm(){
   document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));
 }
 
-function renderQuestionList(){
+async function renderQuestionList(){
   const paperId=document.getElementById('aq-paper').value;
   const container=document.getElementById('question-list-preview');
   const countLabel=document.getElementById('q-count-label');
   if(!paperId){container.innerHTML='';if(countLabel)countLabel.textContent='';return;}
-  const paper=Storage.getPaper(paperId);
+  const paper=await Storage.getPaper(paperId);
   if(!paper?.questions?.length){container.innerHTML='<p style="color:var(--muted);font-size:0.83rem;padding:0.5rem 0;">No questions yet.</p>';if(countLabel)countLabel.textContent='';return;}
   if(countLabel)countLabel.textContent=`(${paper.questions.length})`;
   const sc={physics:'sc-phy',chemistry:'sc-chem',mathematics:'sc-math'};
@@ -614,7 +662,13 @@ function renderQuestionList(){
     return `<div class="q-list-item"><span class="q-num-tag">Q${i+1}</span><div class="q-body-preview"><div>${hasImg}${preview||'<em style="color:var(--muted)">Image only</em>'}</div><div style="margin-top:0.3rem;display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;"><span class="subj-chip ${sc[q.subject]}">${q.subject.slice(0,4).toUpperCase()}</span><span style="font-size:0.68rem;color:var(--muted);">${q.type.toUpperCase()} · Ans: <strong style="color:var(--green);">${correctDisplay}</strong></span>${q.solution||q.solutionImage?'<span style="font-size:0.68rem;color:var(--accent);">solution</span>':''}</div></div><button class="btn-danger" onclick="deleteQuestion('${paper.id}',${i})">X</button></div>`;
   }).join('');
 }
-function deleteQuestion(paperId,idx){if(!confirm('Delete?'))return;const paper=Storage.getPaper(paperId);paper.questions.splice(idx,1);Storage.savePaper(paper);renderQuestionList();onPaperChange();renderPapers();}
+async function deleteQuestion(paperId,idx){
+  if(!confirm('Delete?'))return;
+  const paper=await Storage.getPaper(paperId);
+  paper.questions.splice(idx,1);
+  await Storage.savePaper(paper);
+  await renderQuestionList();await onPaperChange();await renderPapers();
+}
 
 function saveSupabase(){
   const url=document.getElementById('sb-url').value.trim();
@@ -634,6 +688,43 @@ async function testSupabase(){
   }
 }
 function changePass(){const p=document.getElementById('new-pass').value.trim();if(p.length<4){showMsg('pass-msg','Too short.','error');return;}const s=Storage.getSettings();s.adminPass=p;Storage.saveSettings(s);showMsg('pass-msg','Updated.','success');}
+
+async function flushAttempts(){
+  if(!confirm('Delete ALL attempts and scores? This cannot be undone.'))return;
+  const msgEl=document.getElementById('flush-msg');
+  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting...</div>';
+  try{
+    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
+    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`}
+    });
+    if(!res.ok)throw new Error(await res.text());
+    localStorage.removeItem('jee_attempts');
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">All attempts deleted. Leaderboard is now empty.</div>';
+    renderPapers();
+  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
+}
+
+async function flushAll(){
+  if(!confirm('DELETE EVERYTHING? All papers and all attempts will be permanently wiped.'))return;
+  if(!confirm('Are you really sure? This is irreversible.'))return;
+  const msgEl=document.getElementById('flush-msg');
+  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting everything...</div>';
+  try{
+    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
+    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
+    const headers={'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`};
+    // Delete attempts first (FK constraint), then papers
+    await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers});
+    await fetch(`${SUPABASE_URL}/rest/v1/papers?id=neq.null`,{method:'DELETE',headers});
+    localStorage.removeItem('jee_attempts');
+    localStorage.removeItem('jee_papers');
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">Full reset done. Database is empty.</div>';
+    renderPapers();populatePaperDropdown();
+  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
+}
 
 function showMsg(id,msg,type='success'){const el=document.getElementById(id);el.innerHTML=`<div class="${type==='success'?'success':'notice'}">${msg}</div>`;setTimeout(()=>{if(el)el.innerHTML='';},4000);}
 </script>
