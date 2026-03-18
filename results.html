@@ -95,14 +95,15 @@
 
   async function init() {
     await Storage.pullFromSheets();
-    const paper = Storage.getPaper(paperId);
+    const paper = await Storage.getPaper(paperId);
     if (!paper) { document.getElementById('main-content').innerHTML='<p style="color:var(--muted);padding:2rem;">Paper not found.</p>'; return; }
 
     const now = Date.now();
     const isEnded = now > new Date(paper.endTime).getTime();
 
     // Get attempt
-    let attempt = attemptId ? Storage.getAllAttempts().find(a=>a.id===attemptId) : null;
+    const allAttempts = await Storage.getAllAttempts();
+    let attempt = attemptId ? allAttempts.find(a=>a.id===attemptId) : null;
 
     const main = document.getElementById('main-content');
 
@@ -114,7 +115,7 @@
 
     // Personal results
     const scores = attempt.scores || Storage.scoreAttempt(attempt, paper);
-    const lb = Storage.getPaperLeaderboard(paperId);
+    const lb = await Storage.getPaperLeaderboard(paperId);
     const rank = lb.findIndex(e=>e.username.toLowerCase()===attempt.username.toLowerCase())+1;
 
     main.innerHTML = `
@@ -192,7 +193,7 @@
   }
 
   function renderPublicResults(paper) {
-    const lb = Storage.getPaperLeaderboard(paperId);
+    const lb = await Storage.getPaperLeaderboard(paperId);
     return `<div style="margin-bottom:2rem;"><h1 style="font-size:1.5rem;">${paper.title}</h1><p style="color:var(--muted);margin-top:0.5rem;font-size:0.85rem;">Results — ${lb.length} submissions</p></div>
     ${lb.length?`<table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       <thead><tr style="background:rgba(0,194,255,0.05);border-bottom:1px solid var(--border);">
