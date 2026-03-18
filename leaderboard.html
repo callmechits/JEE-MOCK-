@@ -3,212 +3,730 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Leaderboard — JEEAdv26</title>
+<title>Admin — JEEAdv26</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0e17;--surface:#111827;--border:#1e2d40;--accent:#00c2ff;--accent2:#ff6b35;--gold:#ffd700;--text:#e2e8f0;--muted:#64748b;--phy:#3b82f6;--chem:#10b981;--math:#f59e0b;}
+  :root{--bg:#0a0e17;--surface:#111827;--border:#1e2d40;--accent:#00c2ff;--accent2:#ff6b35;--text:#e2e8f0;--muted:#64748b;--phy:#3b82f6;--chem:#10b981;--math:#f59e0b;--green:#22c55e;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
-  body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;}
-  nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;}
-  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
-  .nav-logo span{color:var(--accent2);}
+  nav{background:rgba(10,14,23,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;position:sticky;top:0;z-index:100;}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}.nav-logo span{color:var(--accent2);}
   .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;margin-left:1.5rem;text-transform:uppercase;letter-spacing:0.05em;}
-  .nav-links a:hover,.nav-links a.active{color:var(--accent);}
-  .main{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:2rem;}
-  .page-title{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:0.5rem;}
-  .page-title span{color:var(--accent);}
-  h1{font-size:2rem;font-weight:700;margin-bottom:2rem;}
-
-  /* TABS */
-  .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:2rem;width:fit-content;}
-  .tab{padding:0.6rem 1.4rem;font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;transition:all 0.15s;background:transparent;border:none;font-family:inherit;}
-  .tab:not(:last-child){border-right:1px solid var(--border);}
-  .tab.active{background:var(--accent);color:var(--bg);}
-
-  /* PAPER SELECTOR */
-  .paper-select-wrap{margin-bottom:1.5rem;}
-  select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.6rem 1rem;border-radius:4px;font-family:inherit;font-size:0.88rem;cursor:pointer;}
-  select:focus{outline:none;border-color:var(--accent);}
-  select option{background:var(--surface);}
-
-  /* PODIUM */
-  .podium{display:flex;justify-content:center;align-items:flex-end;gap:1rem;margin-bottom:3rem;padding:1.5rem;}
-  .pod-item{text-align:center;flex:1;max-width:180px;}
-  .pod-block{border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:1.8rem;font-weight:700;}
-  .pod-1{height:120px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));border:1px solid rgba(255,215,0,0.4);color:var(--gold);}
-  .pod-2{height:90px;background:linear-gradient(180deg,rgba(192,192,192,0.15),rgba(192,192,192,0.03));border:1px solid rgba(192,192,192,0.3);color:#c0c0c0;}
-  .pod-3{height:70px;background:linear-gradient(180deg,rgba(205,127,50,0.15),rgba(205,127,50,0.03));border:1px solid rgba(205,127,50,0.3);color:#cd7f32;}
-  .pod-name{font-weight:700;font-size:0.9rem;margin-top:0.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .pod-score{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--muted);}
-
-  /* TABLE */
-  .lb-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
-  .lb-table thead tr{background:rgba(0,194,255,0.05);border-bottom:1px solid var(--border);}
-  .lb-table th{padding:0.75rem 1rem;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
-  .lb-table th.center{text-align:center;}
-  .lb-table td{padding:0.85rem 1rem;border-bottom:1px solid rgba(30,45,64,0.7);font-size:0.88rem;vertical-align:middle;}
-  .lb-table tr:last-child td{border-bottom:none;}
-  .lb-table tr:hover td{background:rgba(255,255,255,0.02);}
-  .rank{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:0.9rem;text-align:center;}
-  .rank.r1{color:var(--gold);}
-  .rank.r2{color:#c0c0c0;}
-  .rank.r3{color:#cd7f32;}
-  .name-cell{font-weight:600;}
-  .score-cell{font-family:'IBM Plex Mono',monospace;font-size:0.88rem;text-align:center;}
-  .phy{color:var(--phy);}
-  .chem{color:var(--chem);}
-  .math{color:var(--math);}
-  .total-cell{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:700;text-align:center;color:var(--text);}
-  .papers-cell{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-align:center;color:var(--muted);}
-
-  /* SUBJECT BARS */
-  .subject-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:2px;margin-top:0.3rem;}
-  .sb-phy,.sb-chem,.sb-math{height:100%;border-radius:2px;transition:width 0.3s;}
-  .sb-phy{background:var(--phy);}
-  .sb-chem{background:var(--chem);}
-  .sb-math{background:var(--math);}
-
-  .empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:0.9rem;}
-  footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.8rem;margin-top:3rem;}
-  footer a{color:var(--accent2);text-decoration:none;}
+  .nav-links a:hover{color:var(--accent);}
+  #login-wall{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;}
+  #login-wall.hidden{display:none;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2.5rem;max-width:380px;width:90%;text-align:center;}
+  .login-box h2{font-size:1.3rem;margin-bottom:0.5rem;}
+  .login-box p{color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;}
+  .form-input{width:100%;padding:0.75rem 1rem;background:#0f172a;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.92rem;font-family:inherit;}
+  .form-input:focus{outline:none;border-color:var(--accent);}
+  .form-textarea{width:100%;padding:0.75rem 1rem;background:#0f172a;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.9rem;font-family:inherit;resize:vertical;min-height:80px;}
+  .form-textarea:focus{outline:none;border-color:var(--accent);}
+  select.form-input option{background:#0f172a;}
+  .form-group{margin-bottom:1.1rem;}
+  .form-label{display:block;font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.35rem;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .btn-primary{background:var(--accent);color:var(--bg);padding:0.75rem 1.5rem;border:none;border-radius:4px;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;}
+  .btn-primary:hover{background:#33cfff;}
+  .btn-small{background:var(--accent);color:var(--bg);padding:0.35rem 0.75rem;border:none;border-radius:3px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-danger{background:#ef4444;color:#fff;padding:0.35rem 0.75rem;border:none;border-radius:3px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;}
+  .admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 60px);}
+  .admin-nav{background:var(--surface);border-right:1px solid var(--border);padding:1rem 0;}
+  .admin-nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1.25rem;color:var(--muted);cursor:pointer;font-size:0.85rem;font-weight:500;transition:all 0.15s;border-left:3px solid transparent;}
+  .admin-nav-item:hover,.admin-nav-item.active{color:var(--accent);background:rgba(0,194,255,0.05);border-left-color:var(--accent);}
+  .admin-nav-sep{height:1px;background:var(--border);margin:0.5rem 1rem;}
+  .admin-content{padding:2rem;overflow-y:auto;max-height:calc(100vh - 60px);}
+  .panel{display:none;}.panel.active{display:block;}
+  .panel-title{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:1.25rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+  .panel-title span{color:var(--accent);}
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1.25rem;}
+  .paste-zone{border:2px dashed var(--border);border-radius:8px;background:#0a0e17;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+  .paste-zone:hover,.paste-zone.drag-over{border-color:var(--accent);background:rgba(0,194,255,0.04);}
+  .paste-zone.has-image{border-style:solid;border-color:var(--green);}
+  .paste-zone-inner{padding:1.25rem;text-align:center;}
+  .paste-zone-label{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+  .paste-zone-label strong{color:var(--accent);display:block;font-size:0.88rem;margin-bottom:0.2rem;}
+  .paste-zone-label kbd{background:rgba(0,194,255,0.12);border:1px solid rgba(0,194,255,0.3);padding:0.1rem 0.4rem;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--accent);}
+  .paste-zone-preview{display:none;padding:0.5rem;}
+  .paste-zone-preview img{max-width:100%;max-height:200px;border-radius:4px;display:block;margin:0 auto;}
+  .paste-zone-preview-bar{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0.6rem;background:#0f172a;border-top:1px solid var(--border);}
+  .paste-zone-preview-bar span{font-size:0.72rem;color:var(--green);}
+  .paste-zone input[type=file]{display:none;}
+  .opt-row{display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:0.6rem;}
+  .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;flex-shrink:0;margin-top:0.45rem;font-family:'IBM Plex Mono',monospace;}
+  .opt-inputs{flex:1;display:flex;flex-direction:column;gap:0.35rem;}
+  .opt-img-mini{display:flex;align-items:center;gap:0.5rem;background:#0f172a;border:1px dashed var(--border);border-radius:4px;padding:0.35rem 0.6rem;cursor:pointer;font-size:0.72rem;color:var(--muted);transition:all 0.15s;}
+  .opt-img-mini:hover{border-color:var(--accent);color:var(--accent);}
+  .opt-img-mini.has-img{border-color:var(--green);color:var(--green);}
+  .opt-img-mini img{height:30px;border-radius:2px;}
+  .correct-pills{display:flex;gap:0.5rem;flex-wrap:wrap;}
+  .correct-pill{padding:0.45rem 1rem;border-radius:20px;border:1.5px solid var(--border);background:#0f172a;color:var(--muted);font-weight:700;font-size:0.85rem;cursor:pointer;transition:all 0.15s;font-family:'IBM Plex Mono',monospace;}
+  .correct-pill:hover{border-color:var(--accent);color:var(--accent);}
+  .correct-pill.selected{background:var(--green);border-color:var(--green);color:#0a0e17;}
+  .type-pills{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.1rem;}
+  .type-pill{padding:0.5rem 1rem;border-radius:4px;border:1.5px solid var(--border);background:#0f172a;color:var(--muted);font-size:0.8rem;cursor:pointer;transition:all 0.15s;font-weight:600;text-align:center;min-width:90px;}
+  .type-pill:hover{border-color:var(--accent);}
+  .type-pill.active{background:var(--accent);border-color:var(--accent);color:#0a0e17;}
+  .type-hint{font-size:0.72rem;color:var(--muted);margin-bottom:1rem;padding:0.5rem 0.75rem;background:#0f172a;border-left:2px solid var(--accent);border-radius:0 3px 3px 0;}
+  .subj-pills{display:flex;gap:0.5rem;margin-bottom:1.1rem;}
+  .subj-pill{padding:0.45rem 1rem;border-radius:4px;border:1.5px solid var(--border);background:#0f172a;color:var(--muted);font-size:0.8rem;cursor:pointer;font-weight:700;}
+  .subj-pill.phy.active{background:var(--phy);border-color:var(--phy);color:#fff;}
+  .subj-pill.chem.active{background:var(--chem);border-color:var(--chem);color:#fff;}
+  .subj-pill.math.active{background:var(--math);border-color:var(--math);color:#0a0e17;}
+  .q-list-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.9rem 1rem;margin-bottom:0.5rem;display:flex;align-items:flex-start;gap:0.75rem;}
+  .q-num-tag{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:700;background:var(--border);padding:0.2rem 0.5rem;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+  .q-body-preview{flex:1;font-size:0.83rem;color:var(--text);line-height:1.5;}
+  .subj-chip{font-size:0.65rem;font-weight:700;padding:0.12rem 0.45rem;border-radius:2px;text-transform:uppercase;}
+  .sc-phy{background:rgba(59,130,246,0.15);color:var(--phy);}
+  .sc-chem{background:rgba(16,185,129,0.15);color:var(--chem);}
+  .sc-math{background:rgba(245,158,11,0.15);color:var(--math);}
+  .ptable{width:100%;border-collapse:collapse;}
+  .ptable th{text-align:left;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);padding:0.6rem 0.75rem;border-bottom:1px solid var(--border);}
+  .ptable td{padding:0.7rem 0.75rem;border-bottom:1px solid rgba(30,45,64,0.5);font-size:0.85rem;vertical-align:middle;}
+  .ptable tr:last-child td{border-bottom:none;}
+  .ptable tr:hover td{background:rgba(255,255,255,0.02);}
+  .gs-box{background:rgba(0,194,255,0.04);border:1px solid rgba(0,194,255,0.15);border-radius:6px;padding:1.5rem;margin-bottom:1.5rem;}
+  .gs-step{display:flex;gap:0.75rem;margin-bottom:0.85rem;align-items:flex-start;}
+  .gs-num{width:22px;height:22px;background:var(--accent);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.72rem;flex-shrink:0;margin-top:2px;}
+  .gs-text{font-size:0.83rem;color:var(--text);line-height:1.6;}
+  .gs-text code{background:rgba(0,194,255,0.1);padding:0.1rem 0.35rem;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--accent);}
+  .notice{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.25);border-radius:4px;padding:0.65rem 0.9rem;font-size:0.8rem;color:#ffa07a;margin-bottom:0.75rem;}
+  .success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:4px;padding:0.65rem 0.9rem;font-size:0.8rem;color:#4ade80;margin-bottom:0.75rem;}
+  .shortcut-bar{background:#0f172a;border:1px solid var(--border);border-radius:4px;padding:0.5rem 0.75rem;font-size:0.72rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+  .shortcut-bar kbd{background:rgba(255,255,255,0.07);padding:0.1rem 0.4rem;border-radius:3px;font-family:'IBM Plex Mono',monospace;color:var(--text);}
 </style>
 </head>
 <body>
-<nav>
-  <div class="nav-logo">JEE<span>ADV</span>26</div>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="leaderboard.html" class="active">Leaderboard</a>
-    <a href="papers.html">Papers</a>
-    <a href="admin.html">Admin</a>
-  </div>
-</nav>
 
-<div class="main">
-  <div class="page-title"><span>#</span> Rankings</div>
-  <h1>Leaderboard</h1>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('overall',this)">Overall</button>
-    <button class="tab" onclick="switchTab('paper',this)">Per Paper</button>
-  </div>
-
-  <!-- OVERALL -->
-  <div id="tab-overall">
-    <div id="podium-overall" class="podium"></div>
-    <table class="lb-table">
-      <thead><tr><th class="center">#</th><th>Student</th><th class="center">PHY</th><th class="center">CHEM</th><th class="center">MATH</th><th class="center">TOTAL</th><th class="center">Papers</th></tr></thead>
-      <tbody id="overall-body"></tbody>
-    </table>
-  </div>
-
-  <!-- PER PAPER -->
-  <div id="tab-paper" style="display:none;">
-    <div class="paper-select-wrap">
-      <select id="paper-select" onchange="renderPaperLb()">
-        <option value="">— Select a Paper —</option>
-      </select>
-    </div>
-    <div id="podium-paper" class="podium"></div>
-    <table class="lb-table">
-      <thead><tr><th class="center">#</th><th>Student</th><th class="center">PHY</th><th class="center">CHEM</th><th class="center">MATH</th><th class="center">TOTAL</th><th class="center">Submitted</th></tr></thead>
-      <tbody id="paper-body"></tbody>
-    </table>
+<div id="login-wall">
+  <div class="login-box">
+    <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+    <h2>Admin Panel</h2>
+    <p>Enter the admin password to continue.</p>
+    <input type="password" id="admin-pass" class="form-input" placeholder="Password" style="margin-bottom:1rem;" autocomplete="off"/>
+    <button class="btn-primary" style="width:100%;" onclick="doLogin()">Login</button>
+    <div id="login-err" style="color:#ef4444;font-size:0.8rem;margin-top:0.75rem;display:none;">Wrong password.</div>
   </div>
 </div>
 
-<footer>Built for <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank">r/JEEAdv26dailyupdates</a> 🎯</footer>
+<nav>
+  <div class="nav-logo">JEE<span>ADV</span>26 <span style="font-size:0.68rem;color:var(--muted);margin-left:0.4rem;">ADMIN</span></div>
+  <div class="nav-links"><a href="index.html">Back to Site</a></div>
+</nav>
+
+<div class="admin-layout">
+  <div class="admin-nav">
+    <div class="admin-nav-item active" onclick="showPanel('papers')" id="nav-papers">📋 Papers</div>
+    <div class="admin-nav-item" onclick="showPanel('create-paper')" id="nav-create-paper">➕ New Paper</div>
+    <div class="admin-nav-sep"></div>
+    <div class="admin-nav-item" onclick="showPanel('add-question')" id="nav-add-question">✏️ Add Questions</div>
+    <div class="admin-nav-sep"></div>
+    <div class="admin-nav-item" onclick="showPanel('settings')" id="nav-settings">⚙️ Settings</div>
+  </div>
+
+  <div class="admin-content">
+
+    <div class="panel active" id="panel-papers">
+      <div class="panel-title"><span>//</span> All Papers</div>
+      <div id="papers-list"></div>
+    </div>
+
+    <div class="panel" id="panel-create-paper">
+      <div class="panel-title"><span>+</span> Create New Paper</div>
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Paper Title</label>
+          <input type="text" class="form-input" id="cp-title" placeholder="e.g. JEE Mock #1 — Full Syllabus"/>
+        </div>
+        <div class="form-row" style="margin-top:1rem;">
+          <div class="form-group">
+            <label class="form-label">Start Date &amp; Time</label>
+            <input type="datetime-local" class="form-input" id="cp-start"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date &amp; Time</label>
+            <input type="datetime-local" class="form-input" id="cp-end"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">Description (optional)</label>
+          <textarea class="form-textarea" id="cp-desc" placeholder="Topics covered, difficulty level, etc."></textarea>
+        </div>
+        <button class="btn-primary" style="margin-top:0.5rem;" onclick="createPaper()">Create Paper</button>
+        <div id="cp-msg" style="margin-top:0.75rem;"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-add-question">
+      <div class="panel-title"><span>✏️</span> Add Questions</div>
+
+      <div class="form-card" style="padding:1rem 1.25rem;margin-bottom:1rem;">
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Paper</label>
+            <select class="form-input" id="aq-paper" onchange="onPaperChange()"></select>
+          </div>
+          <div id="paper-q-count" style="display:flex;align-items:flex-end;padding-bottom:0.1rem;font-size:0.8rem;color:var(--muted);"></div>
+        </div>
+      </div>
+
+      <div class="shortcut-bar">
+        <span>📋 <kbd>Ctrl+V</kbd> anywhere to paste screenshot into question image</span>
+        <span>⌨️ <kbd>Ctrl+Enter</kbd> to save &amp; next</span>
+        <span>🖱️ Drag &amp; drop images onto any zone</span>
+      </div>
+
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <div class="subj-pills">
+            <div class="subj-pill phy active" onclick="setSubject('physics',this)">Physics</div>
+            <div class="subj-pill chem" onclick="setSubject('chemistry',this)">Chemistry</div>
+            <div class="subj-pill math" onclick="setSubject('mathematics',this)">Mathematics</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Question Type</label>
+          <div class="type-pills">
+            <div class="type-pill active" onclick="setType('scq',this)">SCQ<br/><small style="font-weight:400;font-size:0.68rem;">+3 / -1</small></div>
+            <div class="type-pill" onclick="setType('mcq',this)">MCQ<br/><small style="font-weight:400;font-size:0.68rem;">+4 / partial / -2</small></div>
+            <div class="type-pill" onclick="setType('integer',this)">Integer<br/><small style="font-weight:400;font-size:0.68rem;">+3 / 0</small></div>
+          </div>
+          <div class="type-hint" id="type-hint">Single correct — select exactly one option.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Question Text <span style="font-weight:400;text-transform:none;font-size:0.7rem;">(HTML ok: &lt;sup&gt; &lt;sub&gt; &lt;b&gt; &lt;i&gt;)</span></label>
+          <textarea class="form-textarea" id="aq-body" placeholder="Type the question text here..." style="min-height:90px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Question Image <span style="font-weight:400;text-transform:none;font-size:0.7rem;">— screenshot or diagram</span></label>
+          <div class="paste-zone" id="pz-question"
+            ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'question')"
+            onclick="document.getElementById('fi-question').click()">
+            <input type="file" id="fi-question" accept="image/*" onchange="fileToZone(this,'question')"/>
+            <div class="paste-zone-inner" id="pz-question-inner">
+              <div style="font-size:1.5rem;margin-bottom:0.4rem;">🖼️</div>
+              <div class="paste-zone-label">
+                <strong>Paste · Drag · Click</strong>
+                Take a screenshot, then press <kbd>Ctrl+V</kbd> anywhere — it will land here automatically.
+              </div>
+            </div>
+            <div class="paste-zone-preview" id="pz-question-preview">
+              <img id="pz-question-img" src="" alt=""/>
+              <div class="paste-zone-preview-bar">
+                <span>Image attached</span>
+                <button onclick="clearZone(event,'question')" style="background:none;border:none;color:#ef4444;font-size:0.75rem;cursor:pointer;">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="options-section">
+          <div class="form-group">
+            <label class="form-label">Answer Options</label>
+            <div id="opt-rows">
+              <div class="opt-row">
+                <div class="opt-letter" style="color:var(--phy)">A</div>
+                <div class="opt-inputs">
+                  <input type="text" class="form-input" id="opt-A" placeholder="Option A text (leave blank if image only)"/>
+                  <div class="opt-img-mini" id="opt-img-mini-A" ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'optA')" onclick="document.getElementById('fi-optA').click()">
+                    <input type="file" id="fi-optA" accept="image/*" onchange="fileToZone(this,'optA')"/>
+                    <span id="opt-img-label-A">📎 Attach image for option A</span>
+                    <img id="opt-img-preview-A" src="" style="display:none;"/>
+                  </div>
+                </div>
+              </div>
+              <div class="opt-row">
+                <div class="opt-letter" style="color:var(--chem)">B</div>
+                <div class="opt-inputs">
+                  <input type="text" class="form-input" id="opt-B" placeholder="Option B"/>
+                  <div class="opt-img-mini" id="opt-img-mini-B" ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'optB')" onclick="document.getElementById('fi-optB').click()">
+                    <input type="file" id="fi-optB" accept="image/*" onchange="fileToZone(this,'optB')"/>
+                    <span id="opt-img-label-B">📎 Attach image for option B</span>
+                    <img id="opt-img-preview-B" src="" style="display:none;"/>
+                  </div>
+                </div>
+              </div>
+              <div class="opt-row">
+                <div class="opt-letter" style="color:var(--math)">C</div>
+                <div class="opt-inputs">
+                  <input type="text" class="form-input" id="opt-C" placeholder="Option C"/>
+                  <div class="opt-img-mini" id="opt-img-mini-C" ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'optC')" onclick="document.getElementById('fi-optC').click()">
+                    <input type="file" id="fi-optC" accept="image/*" onchange="fileToZone(this,'optC')"/>
+                    <span id="opt-img-label-C">📎 Attach image for option C</span>
+                    <img id="opt-img-preview-C" src="" style="display:none;"/>
+                  </div>
+                </div>
+              </div>
+              <div class="opt-row">
+                <div class="opt-letter" style="color:var(--accent2)">D</div>
+                <div class="opt-inputs">
+                  <input type="text" class="form-input" id="opt-D" placeholder="Option D"/>
+                  <div class="opt-img-mini" id="opt-img-mini-D" ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'optD')" onclick="document.getElementById('fi-optD').click()">
+                    <input type="file" id="fi-optD" accept="image/*" onchange="fileToZone(this,'optD')"/>
+                    <span id="opt-img-label-D">📎 Attach image for option D</span>
+                    <img id="opt-img-preview-D" src="" style="display:none;"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Correct Answer</label>
+            <div class="correct-pills" id="correct-pills">
+              <div class="correct-pill" onclick="toggleCorrect('A',this)">A</div>
+              <div class="correct-pill" onclick="toggleCorrect('B',this)">B</div>
+              <div class="correct-pill" onclick="toggleCorrect('C',this)">C</div>
+              <div class="correct-pill" onclick="toggleCorrect('D',this)">D</div>
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;" id="correct-hint">Click to select correct option</div>
+          </div>
+        </div>
+
+        <div class="form-group" id="integer-section" style="display:none;">
+          <label class="form-label">Correct Answer (integer or decimal)</label>
+          <input type="number" class="form-input" id="aq-correct-int" placeholder="e.g. 4 or 3.14 or -2" step="any"/>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.35rem;">Decimal tolerance: ±0.01</div>
+        </div>
+
+        <div class="form-group" style="margin-top:0.5rem;">
+          <label class="form-label">Solution <span style="font-weight:400;text-transform:none;">(shown after deadline)</span></label>
+          <textarea class="form-textarea" id="aq-solution" placeholder="Step-by-step solution, key formula..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Solution Image</label>
+          <div class="paste-zone" id="pz-solution" style="min-height:auto;"
+            ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'solution')"
+            onclick="document.getElementById('fi-solution').click()">
+            <input type="file" id="fi-solution" accept="image/*" onchange="fileToZone(this,'solution')"/>
+            <div class="paste-zone-inner" id="pz-solution-inner" style="padding:0.75rem;">
+              <div class="paste-zone-label" style="font-size:0.78rem;">📎 Click, drag, or Ctrl+V (while focused here) to attach solution image</div>
+            </div>
+            <div class="paste-zone-preview" id="pz-solution-preview">
+              <img id="pz-solution-img" src="" alt="" style="max-height:120px;"/>
+              <div class="paste-zone-preview-bar">
+                <span>Solution image attached</span>
+                <button onclick="clearZone(event,'solution')" style="background:none;border:none;color:#ef4444;font-size:0.75rem;cursor:pointer;">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.75rem;flex-wrap:wrap;">
+          <button class="btn-primary" id="btn-add-q" onclick="addQuestion()">Save Question &amp; Next</button>
+          <span style="font-size:0.75rem;color:var(--muted);">or <kbd style="background:rgba(255,255,255,0.07);padding:0.1rem 0.35rem;border-radius:3px;font-size:0.72rem;">Ctrl+Enter</kbd></span>
+        </div>
+        <div id="aq-msg" style="margin-top:0.75rem;"></div>
+      </div>
+
+      <div class="panel-title" style="margin-top:1.5rem;"><span>//</span> Questions <span id="q-count-label" style="color:var(--text);"></span></div>
+      <div id="question-list-preview"></div>
+    </div>
+
+    <div class="panel" id="panel-settings">
+      <div class="panel-title"><span>⚙️</span> Settings</div>
+
+      <!-- SUPABASE CONFIG -->
+      <div class="gs-box">
+        <div style="font-weight:700;margin-bottom:0.25rem;color:var(--accent);font-size:0.95rem;">🗄️ Supabase — Free Database Setup</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">One-time setup. Scores sync live across all users worldwide.</div>
+
+        <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project (choose any region close to India).</div></div>
+        <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Wait ~2 min for it to load. Then go to <b>Project Settings → API</b>. Copy the <b>Project URL</b> and <b>anon public</b> key. Paste both below.</div></div>
+        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">In Supabase go to <b>SQL Editor → New Query</b>. Open the file <code>SETUP.sql</code> from your project folder, paste its contents, click <b>Run</b>.</div></div>
+        <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Go to <b>Storage → New Bucket</b>. Name it <code>question-images</code>. Toggle <b>Public bucket = ON</b>. Click Create.</div></div>
+        <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click <b>Test Connection</b> below. If it says Connected — you're done!</div></div>
+
+        <div id="sb-status" style="margin-bottom:1rem;"></div>
+
+        <div class="form-group">
+          <label class="form-label">Supabase Project URL</label>
+          <input type="text" class="form-input" id="sb-url" placeholder="https://xyzxyz.supabase.co"/>
+        </div>
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label class="form-label">Supabase Anon Public Key</label>
+          <input type="text" class="form-input" id="sb-anon" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."/>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="saveSupabase()">Save Config</button>
+          <button class="btn-primary" style="background:#22c55e;" onclick="testSupabase()">Test Connection</button>
+        </div>
+        <div id="sb-msg" style="margin-top:0.75rem;"></div>
+      </div>
+
+      <!-- ADMIN PASSWORD -->
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Change Admin Password</label>
+          <input type="password" class="form-input" id="new-pass" placeholder="New password (min 4 chars)"/>
+        </div>
+        <button class="btn-primary" onclick="changePass()">Update Password</button>
+        <div id="pass-msg" style="margin-top:0.5rem;"></div>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:1.5rem;">
+        <div style="font-weight:700;color:#ef4444;margin-bottom:0.2rem;font-size:0.9rem;">🧨 Danger Zone</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem;">For testing only. Remove this section before going live.</div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;">Delete all attempts</div>
+              <div style="font-size:0.72rem;color:var(--muted);">Clears all scores and leaderboard. Papers stay intact.</div>
+            </div>
+            <button onclick="flushAttempts()" style="background:#ef4444;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Delete Attempts</button>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;">Full reset — delete everything</div>
+              <div style="font-size:0.72rem;color:var(--muted);">Wipes all papers AND attempts from the database.</div>
+            </div>
+            <button onclick="flushAll()" style="background:#7f1d1d;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Full Reset</button>
+          </div>
+
+        </div>
+        <div id="flush-msg" style="margin-top:0.75rem;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script src="js/storage.js"></script>
 <script>
-  async function init() {
-    await Storage.pullFromSheets();
-    renderOverall();
-    populatePaperSelect();
-  }
+let currentSubject='physics',currentType='scq',selectedCorrect=[];
+const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
 
-  function switchTab(name, el) {
-    document.getElementById('tab-overall').style.display = name==='overall'?'block':'none';
-    document.getElementById('tab-paper').style.display = name==='paper'?'block':'none';
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-  }
+document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
+function doLogin(){
+  if(document.getElementById('admin-pass').value===Storage.getSettings().adminPass){
+    document.getElementById('login-wall').classList.add('hidden');init();
+  }else{document.getElementById('login-err').style.display='block';}
+}
 
-  function renderPodium(data, containerId) {
-    const container = document.getElementById(containerId);
-    if (data.length < 1) { container.style.display='none'; return; }
-    container.style.display='flex';
-    const order = [data[1], data[0], data[2]].filter(Boolean);
-    const blockClass = ['pod-2','pod-1','pod-3'];
-    const emojis = ['🥈','🥇','🥉'];
-    container.innerHTML = order.map((e,i)=>`
-      <div class="pod-item">
-        <div class="pod-block ${blockClass[i]}">${emojis[i]}</div>
-        <div class="pod-name">${e.username}</div>
-        <div class="pod-score">${e.total} pts</div>
-      </div>`).join('');
+async function init(){
+  await renderPapers();await populatePaperDropdown();
+  // Prefill Supabase fields
+  const sbUrl=localStorage.getItem('jee_sb_url')||'';
+  const sbAnon=localStorage.getItem('jee_sb_anon')||'';
+  if(sbUrl)document.getElementById('sb-url').value=sbUrl;
+  if(sbAnon)document.getElementById('sb-anon').value=sbAnon;
+  if(!Storage.isConfigured()){
+    document.getElementById('sb-status').innerHTML='<div class="notice" style="margin-bottom:0;">Supabase not configured yet. Go to Settings to connect your database before adding papers.</div>';
+  } else {
+    document.getElementById('sb-status').innerHTML='<div class="success" style="margin-bottom:0;">Supabase configured. Click Test Connection to verify.</div>';
   }
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const start=new Date(now);start.setDate(start.getDate()+1);start.setHours(9,0,0,0);
+  const end=new Date(start);end.setHours(12,0,0,0);
+  document.getElementById('cp-start').value=fmt(start);
+  document.getElementById('cp-end').value=fmt(end);
+}
 
-  function renderOverall() {
-    const data = Storage.getOverallLeaderboard();
-    renderPodium(data, 'podium-overall');
-    const maxTotal = data[0]?.total || 1;
-    const tbody = document.getElementById('overall-body');
-    if (!data.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No attempts yet. Be the first to attempt a mock!</div></td></tr>'; return; }
-    const rankSymbol = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
-    tbody.innerHTML = data.map((e,i)=>{
-      const max = Math.max(e.phy,e.chem,e.math,1);
-      return `<tr>
-        <td><div class="rank ${rankClass(i)}">${rankSymbol(i)}</div></td>
-        <td><div class="name-cell">${e.username}</div>
-          <div class="subject-bar">
-            <div class="sb-phy" style="width:${(e.phy/maxTotal*100*0.33).toFixed(1)}%"></div>
-            <div class="sb-chem" style="width:${(e.chem/maxTotal*100*0.33).toFixed(1)}%"></div>
-            <div class="sb-math" style="width:${(e.math/maxTotal*100*0.33).toFixed(1)}%"></div>
-          </div>
-        </td>
-        <td><div class="score-cell phy">${e.phy}</div></td>
-        <td><div class="score-cell chem">${e.chem}</div></td>
-        <td><div class="score-cell math">${e.math}</div></td>
-        <td><div class="total-cell">${e.total}</div></td>
-        <td><div class="papers-cell">${e.count}</div></td>
-      </tr>`;
-    }).join('');
+async function showPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='add-question'){await populatePaperDropdown();}
+  if(name==='papers')await renderPapers();
+}
+
+function setSubject(subj,el){currentSubject=subj;document.querySelectorAll('.subj-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+const typeHints={scq:'Single correct — click one correct option below.',mcq:'Multiple correct — click ALL correct options. Partial marks if subset; -2 if any wrong.',integer:'Numerical answer — type the exact number. No negative marking.'};
+function setType(type,el){
+  currentType=type;selectedCorrect=[];
+  document.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');
+  document.getElementById('type-hint').textContent=typeHints[type];
+  document.getElementById('options-section').style.display=type==='integer'?'none':'block';
+  document.getElementById('integer-section').style.display=type==='integer'?'block':'none';
+  document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));
+  document.getElementById('correct-hint').textContent=type==='mcq'?'Click multiple for multi-correct':'Click correct option';
+}
+function toggleCorrect(label,el){
+  if(currentType==='scq'){document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));selectedCorrect=[label];el.classList.add('selected');}
+  else{const idx=selectedCorrect.indexOf(label);if(idx>=0){selectedCorrect.splice(idx,1);el.classList.remove('selected');}else{selectedCorrect.push(label);el.classList.add('selected');}}
+}
+
+// Image compression
+function compressImage(dataUrl,maxW=900,quality=0.72){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };img.src=dataUrl;
+  });
+}
+
+function showInZone(zone,dataUrl){
+  imgStore[zone]=dataUrl;
+  const inner=document.getElementById(`pz-${zone}-inner`);
+  const preview=document.getElementById(`pz-${zone}-preview`);
+  const imgEl=document.getElementById(`pz-${zone}-img`);
+  if(inner)inner.style.display='none';
+  if(preview){preview.style.display='block';imgEl.src=dataUrl;}
+  const pz=document.getElementById(`pz-${zone}`);
+  if(pz)pz.classList.add('has-image');
+}
+function showInOptZone(optKey,dataUrl){
+  const letter=optKey.slice(-1);
+  imgStore[optKey]=dataUrl;
+  const mini=document.getElementById(`opt-img-mini-${letter}`);
+  const lbl=document.getElementById(`opt-img-label-${letter}`);
+  const prev=document.getElementById(`opt-img-preview-${letter}`);
+  mini.classList.add('has-img');
+  prev.src=dataUrl;prev.style.display='inline-block';
+  lbl.textContent='Image attached';
+}
+async function fileToZone(input,zone){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{const c=await compressImage(e.target.result);if(zone.startsWith('opt'))showInOptZone(zone,c);else showInZone(zone,c);};
+  reader.readAsDataURL(file);
+}
+function clearZone(event,zone){
+  event.stopPropagation();imgStore[zone]=null;
+  const inner=document.getElementById(`pz-${zone}-inner`);
+  const preview=document.getElementById(`pz-${zone}-preview`);
+  if(inner)inner.style.display='block';if(preview)preview.style.display='none';
+  const pz=document.getElementById(`pz-${zone}`);if(pz)pz.classList.remove('has-image');
+}
+function onDragOver(e,el){e.preventDefault();el.classList.add('drag-over');}
+function onDragLeave(el){el.classList.remove('drag-over');}
+async function onDrop(e,zone){
+  e.preventDefault();e.stopPropagation();
+  const el=e.currentTarget;el.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(!file||!file.type.startsWith('image/'))return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{const c=await compressImage(ev.target.result);if(zone.startsWith('opt'))showInOptZone(zone,c);else showInZone(zone,c);};
+  reader.readAsDataURL(file);
+}
+
+// Global paste — goes to question zone by default
+let pasteTarget='question';
+document.getElementById('pz-solution').addEventListener('mouseenter',()=>pasteTarget='solution');
+document.getElementById('pz-question').addEventListener('mouseenter',()=>pasteTarget='question');
+document.addEventListener('paste',async e=>{
+  const items=e.clipboardData?.items;if(!items)return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      const file=item.getAsFile();
+      const reader=new FileReader();
+      reader.onload=async ev=>{const c=await compressImage(ev.target.result);showInZone(pasteTarget,c);};
+      reader.readAsDataURL(file);break;
+    }
   }
+});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter'&&document.getElementById('panel-add-question').classList.contains('active')){addQuestion();}
+});
 
-  function populatePaperSelect() {
-    const papers = Storage.getPapers().filter(p=>new Date(p.endTime).getTime()<Date.now());
-    const sel = document.getElementById('paper-select');
-    papers.forEach(p=>{
-      const opt = document.createElement('option');
-      opt.value = p.id; opt.textContent = p.title;
-      sel.appendChild(opt);
+// PAPERS
+async function renderPapers(){
+  const container=document.getElementById('papers-list');
+  container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">Loading...</p>';
+  const papers=await Storage.getPapers();
+  if(!papers.length){container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet. Create one!</p>';return;}
+  container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Window</th><th>Questions</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
+    const s=new Date(p.startTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
+    const e2=new Date(p.endTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
+    return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td><td><strong>${p.title}</strong></td><td style="font-size:0.78rem;color:var(--muted);">${s} → ${e2}</td><td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td><td><div style="display:flex;gap:0.4rem;"><button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button><button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button></div></td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+async function populatePaperDropdown(){
+  const papers=await Storage.getPapers();
+  const sel=document.getElementById('aq-paper');
+  const prev=sel.value;
+  sel.innerHTML=papers.length?papers.map(p=>`<option value="${p.id}">${p.title}</option>`).join(''):'<option value="">No papers yet — create one first</option>';
+  if(prev&&papers.find(p=>p.id===prev))sel.value=prev;
+  await renderQuestionList();
+  await onPaperChange();
+}
+async function onPaperChange(){
+  const paperId=document.getElementById('aq-paper').value;
+  const paper=paperId?await Storage.getPaper(paperId):null;
+  const cnt=paper?.questions?.length||0;
+  const el=document.getElementById('paper-q-count');
+  if(el)el.textContent=cnt?`${cnt} question${cnt!==1?'s':''} so far`:'';
+  await renderQuestionList();
+}
+async function createPaper(){
+  const title=document.getElementById('cp-title').value.trim();
+  const start=document.getElementById('cp-start').value;
+  const end=document.getElementById('cp-end').value;
+  if(!title||!start||!end){showMsg('cp-msg','Fill title, start and end time.','error');return;}
+  if(new Date(end)<=new Date(start)){showMsg('cp-msg','End must be after start.','error');return;}
+  const btn=document.querySelector('#panel-create-paper .btn-primary');
+  btn.disabled=true;btn.textContent='Saving...';
+  try {
+    const papers=await Storage.getPapers();
+    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:Date.now()};
+    await Storage.savePaper(paper);
+    showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
+    document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
+    await renderPapers();await populatePaperDropdown();
+  } catch(e) {
+    showMsg('cp-msg',`Error: ${e.message}`,'error');
+  } finally {
+    btn.disabled=false;btn.textContent='Create Paper';
+  }
+}
+async function deletePaper(id){
+  if(!confirm('Delete this paper?'))return;
+  await Storage.deletePaper(id);
+  await renderPapers();await populatePaperDropdown();
+}
+function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-paper').value=id;onPaperChange();}
+
+// ADD QUESTION
+async function addQuestion(){
+  const paperId=document.getElementById('aq-paper').value;
+  if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
+  const body=document.getElementById('aq-body').value.trim();
+  if(!body&&!imgStore.question){showMsg('aq-msg','Add question text or image.','error');return;}
+  let correct=null;
+  if(currentType==='integer'){
+    const v=document.getElementById('aq-correct-int').value.trim();
+    if(!v){showMsg('aq-msg','Enter correct answer.','error');return;}
+    correct=v;
+  }else{
+    if(!selectedCorrect.length){showMsg('aq-msg','Select the correct answer.','error');return;}
+    correct=currentType==='scq'?selectedCorrect[0]:[...selectedCorrect];
+  }
+  const btn=document.getElementById('btn-add-q');
+  btn.disabled=true;btn.textContent='Saving...';
+  try {
+    const paper=await Storage.getPaper(paperId);
+    const options=['A','B','C','D'].map(l=>document.getElementById(`opt-${l}`).value.trim());
+    const optionImages=['A','B','C','D'].map(l=>imgStore[`opt${l}`]||null);
+    const q={id:Storage.generateId(),body,type:currentType,subject:currentSubject,correct,options:currentType!=='integer'?options:undefined,optionImages:currentType!=='integer'?optionImages:undefined,image:imgStore.question||null,solution:document.getElementById('aq-solution').value.trim()||null,solutionImage:imgStore.solution||null};
+    if(!paper.questions)paper.questions=[];
+    paper.questions.push(q);
+    await Storage.savePaper(paper);
+    showMsg('aq-msg',`Q${paper.questions.length} saved (${currentSubject}, ${currentType.toUpperCase()}).`,'success');
+    resetForm();await renderQuestionList();await onPaperChange();
+    setTimeout(()=>document.getElementById('aq-body').focus(),100);
+  } catch(e) {
+    showMsg('aq-msg',`Error saving: ${e.message}`,'error');
+  } finally {
+    btn.disabled=false;btn.textContent='Save Question & Next';
+  }
+}
+
+function resetForm(){
+  document.getElementById('aq-body').value='';
+  document.getElementById('aq-solution').value='';
+  document.getElementById('aq-correct-int').value='';
+  ['A','B','C','D'].forEach(l=>{
+    document.getElementById(`opt-${l}`).value='';
+    imgStore[`opt${l}`]=null;
+    const mini=document.getElementById(`opt-img-mini-${l}`);if(mini)mini.classList.remove('has-img');
+    const prev=document.getElementById(`opt-img-preview-${l}`);if(prev){prev.src='';prev.style.display='none';}
+    const lbl=document.getElementById(`opt-img-label-${l}`);if(lbl)lbl.textContent=`📎 Attach image for option ${l}`;
+  });
+  ['question','solution'].forEach(zone=>{
+    imgStore[zone]=null;
+    const inner=document.getElementById(`pz-${zone}-inner`);const preview=document.getElementById(`pz-${zone}-preview`);
+    if(inner)inner.style.display='block';if(preview)preview.style.display='none';
+    const pz=document.getElementById(`pz-${zone}`);if(pz)pz.classList.remove('has-image');
+  });
+  selectedCorrect=[];
+  document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));
+}
+
+async function renderQuestionList(){
+  const paperId=document.getElementById('aq-paper').value;
+  const container=document.getElementById('question-list-preview');
+  const countLabel=document.getElementById('q-count-label');
+  if(!paperId){container.innerHTML='';if(countLabel)countLabel.textContent='';return;}
+  const paper=await Storage.getPaper(paperId);
+  if(!paper?.questions?.length){container.innerHTML='<p style="color:var(--muted);font-size:0.83rem;padding:0.5rem 0;">No questions yet.</p>';if(countLabel)countLabel.textContent='';return;}
+  if(countLabel)countLabel.textContent=`(${paper.questions.length})`;
+  const sc={physics:'sc-phy',chemistry:'sc-chem',mathematics:'sc-math'};
+  container.innerHTML=paper.questions.map((q,i)=>{
+    const hasImg=q.image?'🖼 ':'';
+    const preview=(q.body||'').replace(/<[^>]+>/g,'').slice(0,80)+((q.body||'').length>80?'...':'');
+    const correctDisplay=Array.isArray(q.correct)?q.correct.join(','):q.correct;
+    return `<div class="q-list-item"><span class="q-num-tag">Q${i+1}</span><div class="q-body-preview"><div>${hasImg}${preview||'<em style="color:var(--muted)">Image only</em>'}</div><div style="margin-top:0.3rem;display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;"><span class="subj-chip ${sc[q.subject]}">${q.subject.slice(0,4).toUpperCase()}</span><span style="font-size:0.68rem;color:var(--muted);">${q.type.toUpperCase()} · Ans: <strong style="color:var(--green);">${correctDisplay}</strong></span>${q.solution||q.solutionImage?'<span style="font-size:0.68rem;color:var(--accent);">solution</span>':''}</div></div><button class="btn-danger" onclick="deleteQuestion('${paper.id}',${i})">X</button></div>`;
+  }).join('');
+}
+async function deleteQuestion(paperId,idx){
+  if(!confirm('Delete?'))return;
+  const paper=await Storage.getPaper(paperId);
+  paper.questions.splice(idx,1);
+  await Storage.savePaper(paper);
+  await renderQuestionList();await onPaperChange();await renderPapers();
+}
+
+function saveSupabase(){
+  const url=document.getElementById('sb-url').value.trim();
+  const anon=document.getElementById('sb-anon').value.trim();
+  if(!url||!anon){showMsg('sb-msg','Paste both URL and key.','error');return;}
+  Storage.setConfig(url,anon);
+  showMsg('sb-msg','Saved! Click Test Connection to verify.','success');
+}
+async function testSupabase(){
+  const statusEl=document.getElementById('sb-status');
+  statusEl.innerHTML='<div class="notice" style="margin-bottom:0;">Testing...</div>';
+  try {
+    await Storage.getPapers();
+    statusEl.innerHTML='<div class="success" style="margin-bottom:0;">Connected to Supabase! Database is working.</div>';
+  } catch(e) {
+    statusEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Connection failed: ${e.message}<br/>Check your URL and key, and make sure you ran SETUP.sql.</div>`;
+  }
+}
+function changePass(){const p=document.getElementById('new-pass').value.trim();if(p.length<4){showMsg('pass-msg','Too short.','error');return;}const s=Storage.getSettings();s.adminPass=p;Storage.saveSettings(s);showMsg('pass-msg','Updated.','success');}
+
+async function flushAttempts(){
+  if(!confirm('Delete ALL attempts and scores? This cannot be undone.'))return;
+  const msgEl=document.getElementById('flush-msg');
+  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting...</div>';
+  try{
+    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
+    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`}
     });
-  }
+    if(!res.ok)throw new Error(await res.text());
+    localStorage.removeItem('jee_attempts');
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">All attempts deleted. Leaderboard is now empty.</div>';
+    renderPapers();
+  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
+}
 
-  function renderPaperLb() {
-    const paperId = document.getElementById('paper-select').value;
-    if (!paperId) return;
-    const data = Storage.getPaperLeaderboard(paperId);
-    renderPodium(data, 'podium-paper');
-    const tbody = document.getElementById('paper-body');
-    if (!data.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No submissions for this paper yet.</div></td></tr>'; return; }
-    const rankSymbol = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
-    tbody.innerHTML = data.map((e,i)=>`<tr>
-      <td><div class="rank ${rankClass(i)}">${rankSymbol(i)}</div></td>
-      <td><div class="name-cell">${e.username}</div></td>
-      <td><div class="score-cell phy">${e.phy}</div></td>
-      <td><div class="score-cell chem">${e.chem}</div></td>
-      <td><div class="score-cell math">${e.math}</div></td>
-      <td><div class="total-cell">${e.total}</div></td>
-      <td style="font-size:0.75rem;color:var(--muted);text-align:center;">${new Date(e.submittedAt).toLocaleDateString('en-IN')}</td>
-    </tr>`).join('');
-  }
+async function flushAll(){
+  if(!confirm('DELETE EVERYTHING? All papers and all attempts will be permanently wiped.'))return;
+  if(!confirm('Are you really sure? This is irreversible.'))return;
+  const msgEl=document.getElementById('flush-msg');
+  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting everything...</div>';
+  try{
+    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
+    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
+    const headers={'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`};
+    // Delete attempts first (FK constraint), then papers
+    await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers});
+    await fetch(`${SUPABASE_URL}/rest/v1/papers?id=neq.null`,{method:'DELETE',headers});
+    localStorage.removeItem('jee_attempts');
+    localStorage.removeItem('jee_papers');
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">Full reset done. Database is empty.</div>';
+    renderPapers();populatePaperDropdown();
+  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
+}
 
-  init();
+function showMsg(id,msg,type='success'){const el=document.getElementById(id);el.innerHTML=`<div class="${type==='success'?'success':'notice'}">${msg}</div>`;setTimeout(()=>{if(el)el.innerHTML='';},4000);}
 </script>
 </body>
 </html>
