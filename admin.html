@@ -563,6 +563,7 @@ async function onPaperChange(){
   await renderQuestionList();
 }
 async function createPaper(){
+  if(!Storage.isConfigured()){showMsg('cp-msg','⚠️ Supabase not configured. Go to Settings tab first and save your URL + key.','error');return;}
   const title=document.getElementById('cp-title').value.trim();
   const start=document.getElementById('cp-start').value;
   const end=document.getElementById('cp-end').value;
@@ -592,6 +593,7 @@ function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-pa
 
 // ADD QUESTION
 async function addQuestion(){
+  if(!Storage.isConfigured()){showMsg('aq-msg','⚠️ Supabase not configured. Go to Settings tab first.','error');return;}
   const paperId=document.getElementById('aq-paper').value;
   if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
   const body=document.getElementById('aq-body').value.trim();
