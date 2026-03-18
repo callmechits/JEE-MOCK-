@@ -378,7 +378,7 @@ const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:n
 
 document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
 function doLogin(){
-  if(document.getElementById('admin-pass').value==='admin123'){
+  if(document.getElementById('admin-pass').value===Storage.getSettings().adminPass){
     document.getElementById('login-wall').classList.add('hidden');init();
   }else{document.getElementById('login-err').style.display='block';}
 }
