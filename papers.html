@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Papers — JEEAdv26</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -11,16 +10,14 @@
   body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
   body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;}
   nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;}
-  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
-  .nav-logo span{color:var(--accent2);}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}.nav-logo span{color:var(--accent2);}
   .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;margin-left:1.5rem;text-transform:uppercase;letter-spacing:0.05em;}
   .nav-links a:hover,.nav-links a.active{color:var(--accent);}
   .main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem;}
   h1{font-size:2rem;font-weight:700;margin-bottom:2rem;}
   .filter-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:2rem;width:fit-content;}
   .filter-tab{padding:0.55rem 1.2rem;font-size:0.78rem;font-weight:600;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:transparent;border:none;font-family:inherit;border-right:1px solid var(--border);}
-  .filter-tab:last-child{border-right:none;}
-  .filter-tab.active{background:var(--accent);color:var(--bg);}
+  .filter-tab:last-child{border-right:none;}.filter-tab.active{background:var(--accent);color:var(--bg);}
   .papers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;}
   .paper-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;text-decoration:none;color:inherit;display:block;}
   .paper-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--phy),var(--chem),var(--math));}
@@ -33,9 +30,7 @@
   .paper-meta{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;}
   .paper-title{font-size:1.05rem;font-weight:600;margin-bottom:0.4rem;}
   .paper-date{font-size:0.8rem;color:var(--muted);margin-bottom:1rem;}
-  .paper-stats{display:flex;gap:1rem;}
-  .paper-stat{font-size:0.78rem;color:var(--muted);}
-  .paper-stat strong{color:var(--text);}
+  .paper-stats{display:flex;gap:1rem;}.paper-stat{font-size:0.78rem;color:var(--muted);}.paper-stat strong{color:var(--text);}
   .paper-action{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
   .paper-action-btn{font-size:0.8rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;}
   .paper-action-btn.orange{color:var(--accent2);}
@@ -46,10 +41,8 @@
 <nav>
   <div class="nav-logo">JEE<span>ADV</span>26</div>
   <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="leaderboard.html">Leaderboard</a>
-    <a href="papers.html" class="active">Papers</a>
-    <a href="admin.html">Admin</a>
+    <a href="index.html">Home</a><a href="leaderboard.html">Leaderboard</a>
+    <a href="papers.html" class="active">Papers</a><a href="admin.html">Admin</a>
   </div>
 </nav>
 <div class="main">
@@ -60,50 +53,40 @@
     <button class="filter-tab" onclick="setFilter('upcoming',this)">Upcoming</button>
     <button class="filter-tab" onclick="setFilter('past',this)">Past</button>
   </div>
-  <div class="papers-grid" id="papers-grid"></div>
+  <div class="papers-grid" id="papers-grid"><div class="empty">Loading...</div></div>
 </div>
 <script src="js/storage.js"></script>
 <script>
-  let filter = 'all';
-  function setFilter(f, el) { filter=f; document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); render(); }
-
-  function getStatus(p) {
-    const now=Date.now(), s=new Date(p.startTime).getTime(), e=new Date(p.endTime).getTime();
-    if(now>=s&&now<=e) return 'live';
-    if(now<s) return 'upcoming';
-    return 'past';
-  }
-
-  function render() {
-    const papers = Storage.getPapers();
-    const attempts = Storage.getAllAttempts();
-    const filtered = filter==='all' ? papers : papers.filter(p=>getStatus(p)===filter);
-    const grid = document.getElementById('papers-grid');
-    if(!filtered.length) { grid.innerHTML='<div class="empty">No papers found.</div>'; return; }
-    grid.innerHTML = filtered.map(p=>{
-      const status = getStatus(p);
-      const badge = status==='live'?'badge-live':status==='upcoming'?'badge-upcoming':'badge-past';
-      const badgeText = status==='live'?'● LIVE':status==='upcoming'?'Upcoming':'Completed';
-      const action = status==='live'?'Attempt Now →':status==='past'?'View Results →':'Opens '+new Date(p.startTime).toLocaleDateString('en-IN');
-      const actionClass = status==='live'?'orange':'';
-      const href = status==='live'?`exam.html?id=${p.id}`:status==='past'?`results.html?id=${p.id}`:'#';
-      const pAttempts = attempts.filter(a=>a.paperId===p.id).length;
-      return `<a href="${href}" class="paper-card ${status==='live'?'live':''}">
-        <div class="paper-meta"><span class="badge ${badge}">${badgeText}</span><span style="font-size:0.72rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Mock #${p.number||'?'}</span></div>
-        <div class="paper-title">${p.title}</div>
-        <div class="paper-date">${new Date(p.startTime).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · 3 Hours</div>
-        ${p.description?`<div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">${p.description}</div>`:''}
-        <div class="paper-stats">
-          <div class="paper-stat"><strong>${p.questions?.length||0}</strong> Questions</div>
-          <div class="paper-stat"><strong>${pAttempts}</strong> Attempts</div>
-        </div>
-        <div class="paper-action"><span class="paper-action-btn ${actionClass}">${action}</span></div>
-      </a>`;
-    }).join('');
-  }
-
-  async function init() { await Storage.pullFromSheets(); render(); }
-  init();
+let filter='all', allPapers=[], allAttempts=[];
+function setFilter(f,el){filter=f;document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
+function getStatus(p){const now=Date.now(),s=new Date(p.startTime).getTime(),e=new Date(p.endTime).getTime();if(now>=s&&now<=e)return 'live';if(now<s)return 'upcoming';return 'past';}
+function render(){
+  const filtered=filter==='all'?allPapers:allPapers.filter(p=>getStatus(p)===filter);
+  const grid=document.getElementById('papers-grid');
+  if(!filtered.length){grid.innerHTML='<div class="empty">No papers found.</div>';return;}
+  grid.innerHTML=filtered.map(p=>{
+    const status=getStatus(p);
+    const badge=status==='live'?'badge-live':status==='upcoming'?'badge-upcoming':'badge-past';
+    const badgeText=status==='live'?'● LIVE':status==='upcoming'?'Upcoming':'Completed';
+    const action=status==='live'?'Attempt Now →':status==='past'?'View Results →':'Opens '+new Date(p.startTime).toLocaleDateString('en-IN');
+    const ac=status==='live'?'orange':'';
+    const href=status==='live'?`exam.html?id=${p.id}`:status==='past'?`results.html?id=${p.id}`:'#';
+    const att=allAttempts.filter(a=>a.paperId===p.id).length;
+    return `<a href="${href}" class="paper-card ${status==='live'?'live':''}">
+      <div class="paper-meta"><span class="badge ${badge}">${badgeText}</span><span style="font-size:0.72rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Mock #${p.number||'?'}</span></div>
+      <div class="paper-title">${p.title}</div>
+      <div class="paper-date">${new Date(p.startTime).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · 3 Hours</div>
+      ${p.description?`<div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">${p.description}</div>`:''}
+      <div class="paper-stats"><div class="paper-stat"><strong>${p.questions?.length||0}</strong> Questions</div><div class="paper-stat"><strong>${att}</strong> Attempts</div></div>
+      <div class="paper-action"><span class="paper-action-btn ${ac}">${action}</span></div>
+    </a>`;
+  }).join('');
+}
+async function init(){
+  [allPapers, allAttempts] = await Promise.all([Storage.getPapers(), Storage.getAllAttempts()]);
+  render();
+}
+init();
 </script>
 </body>
 </html>
