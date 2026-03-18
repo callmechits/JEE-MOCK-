@@ -327,19 +327,41 @@
     </div>
 
     <div class="panel" id="panel-settings">
-      <div class="panel-title"><span>settings</span></div>
+      <div class="panel-title"><span>⚙️</span> Settings</div>
+
+      <!-- SUPABASE CONFIG -->
       <div class="gs-box">
-        <div style="font-weight:700;margin-bottom:1rem;color:var(--accent);font-size:0.9rem;">Google Sheets — Free Database</div>
-        <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to sheets.google.com. Create a new spreadsheet named <code>JEEAdv26-DB</code>.</div></div>
-        <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Extensions &rarr; Apps Script &rarr; delete all code &rarr; paste the contents of <code>google-apps-script.js</code> &rarr; Save.</div></div>
-        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">Deploy &rarr; New Deployment &rarr; Web App &rarr; Execute as Me, access Anyone &rarr; Deploy &rarr; Copy URL.</div></div>
-        <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Open <code>js/config.js</code> and paste your Web App URL in <code>window.GS_WEBHOOK_URL</code>.</div></div>
-        <div class="notice" style="margin-top:1rem;">Use a single shared <code>js/config.js</code> file so all users can load papers and leaderboard data from the same backend.</div>
+        <div style="font-weight:700;margin-bottom:0.25rem;color:var(--accent);font-size:0.95rem;">🗄️ Supabase — Free Database Setup</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">One-time setup. Scores sync live across all users worldwide.</div>
+
+        <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project (choose any region close to India).</div></div>
+        <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Wait ~2 min for it to load. Then go to <b>Project Settings → API</b>. Copy the <b>Project URL</b> and <b>anon public</b> key. Paste both below.</div></div>
+        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">In Supabase go to <b>SQL Editor → New Query</b>. Open the file <code>SETUP.sql</code> from your project folder, paste its contents, click <b>Run</b>.</div></div>
+        <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Go to <b>Storage → New Bucket</b>. Name it <code>question-images</code>. Toggle <b>Public bucket = ON</b>. Click Create.</div></div>
+        <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click <b>Test Connection</b> below. If it says Connected — you're done!</div></div>
+
+        <div id="sb-status" style="margin-bottom:1rem;"></div>
+
+        <div class="form-group">
+          <label class="form-label">Supabase Project URL</label>
+          <input type="text" class="form-input" id="sb-url" placeholder="https://xyzxyz.supabase.co"/>
+        </div>
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label class="form-label">Supabase Anon Public Key</label>
+          <input type="text" class="form-input" id="sb-anon" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."/>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="saveSupabase()">Save Config</button>
+          <button class="btn-primary" style="background:#22c55e;" onclick="testSupabase()">Test Connection</button>
+        </div>
+        <div id="sb-msg" style="margin-top:0.75rem;"></div>
       </div>
+
+      <!-- ADMIN PASSWORD -->
       <div class="form-card">
         <div class="form-group">
           <label class="form-label">Change Admin Password</label>
-          <input type="password" class="form-input" id="new-pass" placeholder="New password"/>
+          <input type="password" class="form-input" id="new-pass" placeholder="New password (min 4 chars)"/>
         </div>
         <button class="btn-primary" onclick="changePass()">Update Password</button>
         <div id="pass-msg" style="margin-top:0.5rem;"></div>
@@ -349,33 +371,30 @@
   </div>
 </div>
 
-<script src="js/config.js"></script>
 <script src="js/storage.js"></script>
 <script>
 let currentSubject='physics',currentType='scq',selectedCorrect=[];
 const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
 
 document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
-if (Storage.isAdminLoggedIn()) {
-  document.getElementById('login-wall').classList.add('hidden');
-  init();
-}
-
-async function doLogin(){
-  const pass=document.getElementById('admin-pass').value;
-  try{
-    await Storage.adminLogin(pass);
-    document.getElementById('login-wall').classList.add('hidden');
-    document.getElementById('login-err').style.display='none';
-    init();
-  }catch(err){
-    document.getElementById('login-err').textContent=err.message||'Login failed.';
-    document.getElementById('login-err').style.display='block';
-  }
+function doLogin(){
+  if(document.getElementById('admin-pass').value===Storage.getSettings().adminPass){
+    document.getElementById('login-wall').classList.add('hidden');init();
+  }else{document.getElementById('login-err').style.display='block';}
 }
 
 function init(){
   renderPapers();populatePaperDropdown();
+  // Prefill Supabase fields
+  const sbUrl=localStorage.getItem('jee_sb_url')||'';
+  const sbAnon=localStorage.getItem('jee_sb_anon')||'';
+  if(sbUrl)document.getElementById('sb-url').value=sbUrl;
+  if(sbAnon)document.getElementById('sb-anon').value=sbAnon;
+  if(!Storage.isConfigured()){
+    document.getElementById('sb-status').innerHTML='<div class="notice" style="margin-bottom:0;">Supabase not configured yet. Go to Settings to connect your database before adding papers.</div>';
+  } else {
+    document.getElementById('sb-status').innerHTML='<div class="success" style="margin-bottom:0;">Supabase configured. Click Test Connection to verify.</div>';
+  }
   const now=new Date(),pad=n=>String(n).padStart(2,'0');
   const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const start=new Date(now);start.setDate(start.getDate()+1);start.setHours(9,0,0,0);
@@ -401,7 +420,96 @@ function setType(type,el){
   document.getElementById('type-hint').textContent=typeHints[type];
   document.getElementById('options-section').style.display=type==='integer'?'none':'block';
   document.getElementById('integer-section').style.display=type==='integer'?'block':'none';
-@@ -488,113 +494,117 @@ function renderPapers(){
+  document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));
+  document.getElementById('correct-hint').textContent=type==='mcq'?'Click multiple for multi-correct':'Click correct option';
+}
+function toggleCorrect(label,el){
+  if(currentType==='scq'){document.querySelectorAll('.correct-pill').forEach(p=>p.classList.remove('selected'));selectedCorrect=[label];el.classList.add('selected');}
+  else{const idx=selectedCorrect.indexOf(label);if(idx>=0){selectedCorrect.splice(idx,1);el.classList.remove('selected');}else{selectedCorrect.push(label);el.classList.add('selected');}}
+}
+
+// Image compression
+function compressImage(dataUrl,maxW=900,quality=0.72){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };img.src=dataUrl;
+  });
+}
+
+function showInZone(zone,dataUrl){
+  imgStore[zone]=dataUrl;
+  const inner=document.getElementById(`pz-${zone}-inner`);
+  const preview=document.getElementById(`pz-${zone}-preview`);
+  const imgEl=document.getElementById(`pz-${zone}-img`);
+  if(inner)inner.style.display='none';
+  if(preview){preview.style.display='block';imgEl.src=dataUrl;}
+  const pz=document.getElementById(`pz-${zone}`);
+  if(pz)pz.classList.add('has-image');
+}
+function showInOptZone(optKey,dataUrl){
+  const letter=optKey.slice(-1);
+  imgStore[optKey]=dataUrl;
+  const mini=document.getElementById(`opt-img-mini-${letter}`);
+  const lbl=document.getElementById(`opt-img-label-${letter}`);
+  const prev=document.getElementById(`opt-img-preview-${letter}`);
+  mini.classList.add('has-img');
+  prev.src=dataUrl;prev.style.display='inline-block';
+  lbl.textContent='Image attached';
+}
+async function fileToZone(input,zone){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{const c=await compressImage(e.target.result);if(zone.startsWith('opt'))showInOptZone(zone,c);else showInZone(zone,c);};
+  reader.readAsDataURL(file);
+}
+function clearZone(event,zone){
+  event.stopPropagation();imgStore[zone]=null;
+  const inner=document.getElementById(`pz-${zone}-inner`);
+  const preview=document.getElementById(`pz-${zone}-preview`);
+  if(inner)inner.style.display='block';if(preview)preview.style.display='none';
+  const pz=document.getElementById(`pz-${zone}`);if(pz)pz.classList.remove('has-image');
+}
+function onDragOver(e,el){e.preventDefault();el.classList.add('drag-over');}
+function onDragLeave(el){el.classList.remove('drag-over');}
+async function onDrop(e,zone){
+  e.preventDefault();e.stopPropagation();
+  const el=e.currentTarget;el.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(!file||!file.type.startsWith('image/'))return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{const c=await compressImage(ev.target.result);if(zone.startsWith('opt'))showInOptZone(zone,c);else showInZone(zone,c);};
+  reader.readAsDataURL(file);
+}
+
+// Global paste — goes to question zone by default
+let pasteTarget='question';
+document.getElementById('pz-solution').addEventListener('mouseenter',()=>pasteTarget='solution');
+document.getElementById('pz-question').addEventListener('mouseenter',()=>pasteTarget='question');
+document.addEventListener('paste',async e=>{
+  const items=e.clipboardData?.items;if(!items)return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      const file=item.getAsFile();
+      const reader=new FileReader();
+      reader.onload=async ev=>{const c=await compressImage(ev.target.result);showInZone(pasteTarget,c);};
+      reader.readAsDataURL(file);break;
+    }
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter'&&document.getElementById('panel-add-question').classList.contains('active')){addQuestion();}
+});
+
+// PAPERS
+function renderPapers(){
+  const papers=Storage.getPapers();
   const container=document.getElementById('papers-list');
   if(!papers.length){container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet.</p>';return;}
   container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Window</th><th>Questions</th><th>Attempts</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
@@ -427,23 +535,23 @@ function onPaperChange(){
   const el=document.getElementById('paper-q-count');
   if(el)el.textContent=cnt?`${cnt} question${cnt!==1?'s':''} so far`:'';
 }
-async function createPaper(){
+function createPaper(){
   const title=document.getElementById('cp-title').value.trim();
   const start=document.getElementById('cp-start').value;
   const end=document.getElementById('cp-end').value;
   if(!title||!start||!end){showMsg('cp-msg','Fill title, start and end time.','error');return;}
   if(new Date(end)<=new Date(start)){showMsg('cp-msg','End must be after start.','error');return;}
   const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:Storage.getPapers().length+1,createdAt:Date.now()};
-  await Storage.savePaper(paper);
+  Storage.savePaper(paper);
   showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
   document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
   renderPapers();populatePaperDropdown();
 }
-async function deletePaper(id){if(!confirm('Delete this paper?'))return;try{await Storage.deletePaper(id);renderPapers();populatePaperDropdown();}catch(e){showMsg('cp-msg',e.message,'error');}}
+function deletePaper(id){if(!confirm('Delete this paper?'))return;Storage.deletePaper(id);renderPapers();populatePaperDropdown();}
 function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-paper').value=id;onPaperChange();}
 
 // ADD QUESTION
-async function addQuestion(){
+function addQuestion(){
   const paperId=document.getElementById('aq-paper').value;
   if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
   const paper=Storage.getPaper(paperId);
@@ -463,7 +571,7 @@ async function addQuestion(){
   const q={id:Storage.generateId(),body,type:currentType,subject:currentSubject,correct,options:currentType!=='integer'?options:undefined,optionImages:currentType!=='integer'?optionImages:undefined,image:imgStore.question||null,solution:document.getElementById('aq-solution').value.trim()||null,solutionImage:imgStore.solution||null};
   if(!paper.questions)paper.questions=[];
   paper.questions.push(q);
-  await Storage.savePaper(paper);
+  Storage.savePaper(paper);
   showMsg('aq-msg',`Q${paper.questions.length} added (${currentSubject}, ${currentType.toUpperCase()}).`,'success');
   resetForm();renderQuestionList();onPaperChange();
   setTimeout(()=>document.getElementById('aq-body').focus(),100);
@@ -506,14 +614,26 @@ function renderQuestionList(){
     return `<div class="q-list-item"><span class="q-num-tag">Q${i+1}</span><div class="q-body-preview"><div>${hasImg}${preview||'<em style="color:var(--muted)">Image only</em>'}</div><div style="margin-top:0.3rem;display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;"><span class="subj-chip ${sc[q.subject]}">${q.subject.slice(0,4).toUpperCase()}</span><span style="font-size:0.68rem;color:var(--muted);">${q.type.toUpperCase()} · Ans: <strong style="color:var(--green);">${correctDisplay}</strong></span>${q.solution||q.solutionImage?'<span style="font-size:0.68rem;color:var(--accent);">solution</span>':''}</div></div><button class="btn-danger" onclick="deleteQuestion('${paper.id}',${i})">X</button></div>`;
   }).join('');
 }
-async function deleteQuestion(paperId,idx){if(!confirm('Delete?'))return;const paper=Storage.getPaper(paperId);paper.questions.splice(idx,1);await Storage.savePaper(paper);renderQuestionList();onPaperChange();renderPapers();}
+function deleteQuestion(paperId,idx){if(!confirm('Delete?'))return;const paper=Storage.getPaper(paperId);paper.questions.splice(idx,1);Storage.savePaper(paper);renderQuestionList();onPaperChange();renderPapers();}
 
-async function changePass(){
-  const p=document.getElementById('new-pass').value.trim();
-  if(p.length<6){showMsg('pass-msg','Use at least 6 characters.','error');return;}
-  try{await Storage.adminChangePassword(p);showMsg('pass-msg','Password updated on server.','success');document.getElementById('new-pass').value='';}
-  catch(e){showMsg('pass-msg',e.message,'error');}
+function saveSupabase(){
+  const url=document.getElementById('sb-url').value.trim();
+  const anon=document.getElementById('sb-anon').value.trim();
+  if(!url||!anon){showMsg('sb-msg','Paste both URL and key.','error');return;}
+  Storage.setConfig(url,anon);
+  showMsg('sb-msg','Saved! Click Test Connection to verify.','success');
 }
+async function testSupabase(){
+  const statusEl=document.getElementById('sb-status');
+  statusEl.innerHTML='<div class="notice" style="margin-bottom:0;">Testing...</div>';
+  try {
+    await Storage.getPapers();
+    statusEl.innerHTML='<div class="success" style="margin-bottom:0;">Connected to Supabase! Database is working.</div>';
+  } catch(e) {
+    statusEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Connection failed: ${e.message}<br/>Check your URL and key, and make sure you ran SETUP.sql.</div>`;
+  }
+}
+function changePass(){const p=document.getElementById('new-pass').value.trim();if(p.length<4){showMsg('pass-msg','Too short.','error');return;}const s=Storage.getSettings();s.adminPass=p;Storage.saveSettings(s);showMsg('pass-msg','Updated.','success');}
 
 function showMsg(id,msg,type='success'){const el=document.getElementById(id);el.innerHTML=`<div class="${type==='success'?'success':'notice'}">${msg}</div>`;setTimeout(()=>{if(el)el.innerHTML='';},4000);}
 </script>
