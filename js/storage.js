@@ -2,50 +2,63 @@
 //  storage.js  —  JEEAdv26  |  Supabase backend
 // ═══════════════════════════════════════════════════════════
 
-let SUPABASE_URL  = localStorage.getItem('jee_sb_url')  || '';
-let SUPABASE_ANON = localStorage.getItem('jee_sb_anon') || '';
+// Always read fresh from localStorage so setConfig() takes effect immediately
+// without needing a page reload
+function _url()  { return localStorage.getItem('jee_sb_url')  || ''; }
+function _anon() { return localStorage.getItem('jee_sb_anon') || ''; }
 
 // ── Raw Supabase REST calls ──────────────────────────────────
 const SB = {
   get h() {
     return {
-      'apikey': SUPABASE_ANON,
-      'Authorization': `Bearer ${SUPABASE_ANON}`,
+      'apikey': _anon(),
+      'Authorization': `Bearer ${_anon()}`,
       'Content-Type': 'application/json',
     };
   },
+  _check() {
+    const url = _url(), anon = _anon();
+    if (!url || !url.startsWith('https://'))
+      throw new Error('Supabase not configured. Go to Admin → Settings and paste your Project URL + anon key.');
+    if (!anon)
+      throw new Error('Supabase anon key missing. Go to Admin → Settings.');
+  },
   async select(table, query='') {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: this.h });
-    if (!r.ok) throw new Error(await r.text());
+    this._check();
+    const r = await fetch(`${_url()}/rest/v1/${table}?${query}`, { headers: this.h });
+    if (!r.ok) throw new Error(`Supabase error (${r.status}): ${await r.text()}`);
     return r.json();
   },
   async upsert(table, data) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    this._check();
+    const r = await fetch(`${_url()}/rest/v1/${table}`, {
       method: 'POST',
       headers: { ...this.h, 'Prefer': 'return=representation,resolution=merge-duplicates' },
       body: JSON.stringify(data)
     });
-    if (!r.ok) throw new Error(await r.text());
+    if (!r.ok) throw new Error(`Supabase error (${r.status}): ${await r.text()}`);
     return r.json();
   },
   async del(table, match) {
+    this._check();
     const q = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${q}`, { method: 'DELETE', headers: this.h });
-    if (!r.ok) throw new Error(await r.text());
+    const r = await fetch(`${_url()}/rest/v1/${table}?${q}`, { method: 'DELETE', headers: this.h });
+    if (!r.ok) throw new Error(`Supabase error (${r.status}): ${await r.text()}`);
   },
   async uploadImage(path, dataUrl) {
+    this._check();
     const [head, b64] = dataUrl.split(',');
     const mime = head.match(/:(.*?);/)[1];
     const bytes = atob(b64);
     const u8 = new Uint8Array(bytes.length);
     for (let i = 0; i < bytes.length; i++) u8[i] = bytes.charCodeAt(i);
-    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/question-images/${path}`, {
+    const r = await fetch(`${_url()}/storage/v1/object/question-images/${path}`, {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': mime, 'x-upsert': 'true' },
+      headers: { 'apikey': _anon(), 'Authorization': `Bearer ${_anon()}`, 'Content-Type': mime, 'x-upsert': 'true' },
       body: new Blob([u8], { type: mime })
     });
-    if (!r.ok) throw new Error(await r.text());
-    return `${SUPABASE_URL}/storage/v1/object/public/question-images/${path}`;
+    if (!r.ok) throw new Error(`Image upload error (${r.status}): ${await r.text()}`);
+    return `${_url()}/storage/v1/object/public/question-images/${path}`;
   }
 };
 
@@ -81,11 +94,10 @@ async function maybeUpload(val, filename) {
 const Storage = {
 
   // ── Config ────────────────────────────────────────────────
-  isConfigured() { return !!(SUPABASE_URL && SUPABASE_ANON && SUPABASE_URL.startsWith('https://')); },
+  isConfigured() { const u=_url(); return !!(u && u.startsWith('https://')); },
   setConfig(url, anon) {
-    SUPABASE_URL = url; SUPABASE_ANON = anon;
-    localStorage.setItem('jee_sb_url', url);
-    localStorage.setItem('jee_sb_anon', anon);
+    localStorage.setItem('jee_sb_url', url.trim());
+    localStorage.setItem('jee_sb_anon', anon.trim());
   },
 
   // ── Settings (local only — admin password) ─────────────
