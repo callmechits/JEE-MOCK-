@@ -2,10 +2,13 @@
 //  storage.js  —  JEEAdv26  |  Supabase backend
 // ═══════════════════════════════════════════════════════════
 
-// Always read fresh from localStorage so setConfig() takes effect immediately
-// without needing a page reload
-function _url()  { return localStorage.getItem('jee_sb_url')  || ''; }
-function _anon() { return localStorage.getItem('jee_sb_anon') || ''; }
+// !! REPLACE THESE WITH YOUR ACTUAL VALUES !!
+const DEFAULT_URL  = 'https://lspzncyznzvqhzsinias.supabase.co';
+const DEFAULT_ANON = 'PASTE_YOUR_ANON_KEY_HERE';
+
+// Read from localStorage if set (admin panel), otherwise use defaults above
+function _url()  { return localStorage.getItem('jee_sb_url')  || DEFAULT_URL;  }
+function _anon() { return localStorage.getItem('jee_sb_anon') || DEFAULT_ANON; }
 
 // ── Raw Supabase REST calls ──────────────────────────────────
 const SB = {
