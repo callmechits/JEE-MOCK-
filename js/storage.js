@@ -166,9 +166,12 @@ const Storage = {
           q.optionImages[i] = await maybeUpload(q.optionImages[i], `q-${q.id}-opt${i}`);
       }
     }
-    const row = { id:paper.id, title:paper.title, start_time:paper.startTime, end_time:paper.endTime,
+    const row = { id:paper.id, title:paper.title,
+                  start_time: new Date(paper.startTime).toISOString(),
+                  end_time: new Date(paper.endTime).toISOString(),
                   number:paper.number||1, description:paper.description||'',
-                  questions:paper.questions||[], created_at:paper.createdAt||new Date().toISOString() };
+                  questions:paper.questions||[],
+                  created_at: paper.createdAt ? new Date(paper.createdAt).toISOString() : new Date().toISOString() };
     await SB.upsert('papers', row);
     const norm = normPaper(row);
     const cached = Cache.get('papers')||[];
