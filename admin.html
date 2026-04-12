@@ -574,7 +574,7 @@ async function createPaper(){
   btn.disabled=true;btn.textContent='Saving...';
   try {
     const papers=await Storage.getPapers();
-    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:Date.now()};
+    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:new Date().toISOString()};
     await Storage.savePaper(paper);
     showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
     document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
