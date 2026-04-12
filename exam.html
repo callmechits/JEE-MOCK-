@@ -207,7 +207,7 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=3"></script>
+<script src="js/storage.js?v=4"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const paperId = params.get('id');
@@ -239,24 +239,30 @@
     document.getElementById('username-input').onkeydown = e => { if(e.key==='Enter') startExam(); };
   }
 
-  function startExam() {
+  async function startExam() {
     const val = document.getElementById('username-input').value.trim();
     if (!val) { document.getElementById('username-input').style.borderColor='#ef4444'; return; }
     username = val;
-    // Load or create attempt
-    attempt = await Storage.getUserAttempt(paperId, username);
-    if (attempt && attempt.submitted) { alert('You have already submitted this paper!'); location.href=`results.html?id=${paperId}`; return; }
-    if (!attempt) {
-      attempt = { id: Storage.generateId(), paperId, username, startedAt: Date.now(), submitted: false, answers: {}, states: {}, scores: null };
+    const btn = document.getElementById('username-submit');
+    btn.textContent = 'Loading...'; btn.disabled = true;
+    try {
+      attempt = await Storage.getUserAttempt(paperId, username);
+      if (attempt && attempt.submitted) { alert('You have already submitted this paper!'); location.href=`results.html?id=${paperId}`; return; }
+      if (!attempt) {
+        attempt = { id: Storage.generateId(), paperId, username, startedAt: Date.now(), submitted: false, answers: {}, states: {}, scores: null };
+      }
+      answers = attempt.answers || {};
+      states = attempt.states || {};
+      document.getElementById('username-modal').classList.add('hidden');
+      document.getElementById('username-display').textContent = `Candidate: ${username}`;
+      document.getElementById('sb-username').textContent = username;
+      startTimer();
+      renderSectionTabs();
+      switchSection(sections[0].key);
+    } catch(e) {
+      btn.textContent = 'Start Exam →'; btn.disabled = false;
+      alert('Error starting exam: ' + e.message);
     }
-    answers = attempt.answers || {};
-    states = attempt.states || {};
-    document.getElementById('username-modal').classList.add('hidden');
-    document.getElementById('username-display').textContent = `Candidate: ${username}`;
-    document.getElementById('sb-username').textContent = username;
-    startTimer();
-    renderSectionTabs();
-    switchSection(sections[0].key);
   }
 
   // ── SECTIONS ─────────────────────────────────────────────────
