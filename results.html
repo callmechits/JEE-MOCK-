@@ -87,7 +87,7 @@
   <div style="text-align:center;padding:4rem;color:var(--muted);">Loading results...</div>
 </div>
 
-<script src="js/storage.js?v=3"></script>
+<script src="js/storage.js?v=6"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const paperId = params.get('id');
@@ -108,8 +108,8 @@
     const main = document.getElementById('main-content');
 
     if (!attempt) {
-      // Public results view — show leaderboard only
-      main.innerHTML = renderPublicResults(paper);
+      const lb = await Storage.getPaperLeaderboard(paperId);
+      main.innerHTML = renderPublicResults(paper, lb);
       return;
     }
 
@@ -192,8 +192,7 @@
     return html;
   }
 
-  function renderPublicResults(paper) {
-    const lb = await Storage.getPaperLeaderboard(paperId);
+  function renderPublicResults(paper, lb) {
     return `<div style="margin-bottom:2rem;"><h1 style="font-size:1.5rem;">${paper.title}</h1><p style="color:var(--muted);margin-top:0.5rem;font-size:0.85rem;">Results — ${lb.length} submissions</p></div>
     ${lb.length?`<table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       <thead><tr style="background:rgba(0,194,255,0.05);border-bottom:1px solid var(--border);">
