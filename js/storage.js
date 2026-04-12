@@ -205,9 +205,10 @@ const Storage = {
     } catch { return (Cache.get('attempts')||[]).find(a=>a.paperId===paperId&&a.username.toLowerCase()===username.toLowerCase())||null; }
   },
   async saveAttempt(attempt) {
+    const toISO = v => v ? new Date(v).toISOString() : null;
     const row = { id:attempt.id, paper_id:attempt.paperId, username:attempt.username,
-                  started_at:   attempt.startedAt   ? new Date(attempt.startedAt).toISOString()   : new Date().toISOString(),
-                  submitted_at: attempt.submittedAt ? new Date(attempt.submittedAt).toISOString() : null,
+                  started_at:   toISO(attempt.startedAt)   || new Date().toISOString(),
+                  submitted_at: toISO(attempt.submittedAt) || null,
                   submitted: attempt.submitted||false, answers:attempt.answers||{}, states:attempt.states||{},
                   phy_score:attempt.scores?.phy??null, chem_score:attempt.scores?.chem??null,
                   math_score:attempt.scores?.math??null, total_score:attempt.scores?.total??null };
