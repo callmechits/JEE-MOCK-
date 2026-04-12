@@ -207,7 +207,7 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=4"></script>
+<script src="js/storage.js?v=5"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const paperId = params.get('id');
@@ -218,18 +218,29 @@
 
   // ── INIT ────────────────────────────────────────────────────
   window.onload = async () => {
-    await Storage.pullFromSheets();
-    paper = await Storage.getPaper(paperId);
-    if (!paper) { alert('Paper not found!'); location.href='index.html'; return; }
-    // Check if exam window is open
-    const now = Date.now();
-    const start = new Date(paper.startTime).getTime();
-    const end = new Date(paper.endTime).getTime();
-    if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
-    if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
-    document.getElementById('topbar-title').textContent = paper.title;
-    buildSections();
-    showUsernameModal();
+    try {
+      paper = await Storage.getPaper(paperId);
+      if (!paper) { alert('Paper not found! Check the URL.'); location.href='index.html'; return; }
+      const now = Date.now();
+      const start = new Date(paper.startTime).getTime();
+      const end = new Date(paper.endTime).getTime();
+      if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
+      if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
+      if (!paper.questions || paper.questions.length === 0) {
+        alert('This paper has no questions yet! Add questions in the Admin panel first.');
+        location.href='index.html'; return;
+      }
+      document.getElementById('topbar-title').textContent = paper.title;
+      buildSections();
+      if (sections.length === 0) {
+        alert('No questions found in this paper. Please add questions first.');
+        location.href='index.html'; return;
+      }
+      showUsernameModal();
+    } catch(e) {
+      alert('Error loading paper: ' + e.message);
+      location.href='index.html';
+    }
   };
 
   function showUsernameModal() {
