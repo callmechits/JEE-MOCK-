@@ -398,16 +398,31 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=3"></script>
+<script src="js/storage.js?v=7"></script>
 <script>
 let currentSubject='physics',currentType='scq',selectedCorrect=[];
 const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
 
+// Hash password using SHA-256 — never store or compare plaintext
+async function hashPass(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
-function doLogin(){
-  if(document.getElementById('admin-pass').value===Storage.getSettings().adminPass){
+async function doLogin(){
+  const entered = document.getElementById('admin-pass').value;
+  const enteredHash = await hashPass(entered);
+  const s = Storage.getSettings();
+  // Support both legacy plaintext (first time) and hashed passwords
+  const storedHash = s.adminPassHash || await hashPass(s.adminPass || 'admin123');
+  if(enteredHash === storedHash){
+    // Migrate to hashed if still on plaintext
+    if(!s.adminPassHash){ s.adminPassHash = storedHash; delete s.adminPass; Storage.saveSettings(s); }
     document.getElementById('login-wall').classList.add('hidden');init();
-  }else{document.getElementById('login-err').style.display='block';}
+  }else{
+    document.getElementById('login-err').style.display='block';
+  }
 }
 
 async function init(){
@@ -690,7 +705,15 @@ async function testSupabase(){
     statusEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Connection failed: ${e.message}<br/>Check your URL and key, and make sure you ran SETUP.sql.</div>`;
   }
 }
-function changePass(){const p=document.getElementById('new-pass').value.trim();if(p.length<4){showMsg('pass-msg','Too short.','error');return;}const s=Storage.getSettings();s.adminPass=p;Storage.saveSettings(s);showMsg('pass-msg','Updated.','success');}
+async function changePass(){
+  const p=document.getElementById('new-pass').value.trim();
+  if(p.length<4){showMsg('pass-msg','Too short.','error');return;}
+  const s=Storage.getSettings();
+  s.adminPassHash = await hashPass(p);
+  delete s.adminPass; // remove any old plaintext
+  Storage.saveSettings(s);
+  showMsg('pass-msg','Password updated.','success');
+}
 
 async function flushAttempts(){
   if(!confirm('Delete ALL attempts and scores? This cannot be undone.'))return;
