@@ -33,11 +33,14 @@ const SB = {
     this._check();
     const r = await fetch(`${_url()}/rest/v1/${table}`, {
       method: 'POST',
-      headers: { ...this.h, 'Prefer': 'return=representation,resolution=merge-duplicates' },
+      headers: { ...this.h, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify(data)
     });
     if (!r.ok) throw new Error(`Supabase error (${r.status}): ${await r.text()}`);
-    return r.json();
+    // 204 No Content is a valid success response
+    if (r.status === 204) return data;
+    const text = await r.text();
+    return text ? JSON.parse(text) : data;
   },
   async del(table, match) {
     this._check();
