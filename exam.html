@@ -207,7 +207,7 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=5"></script>
+<script src="js/storage.js?v=6"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const paperId = params.get('id');
@@ -418,10 +418,10 @@
     }
   }
 
-  function autoSave() {
+  async function autoSave() {
     attempt.answers = answers;
     attempt.states = states;
-    await Storage.saveAttempt(attempt);
+    try { await Storage.saveAttempt(attempt); } catch(e) { console.warn('Autosave failed:', e.message); }
   }
 
   // ── SIDEBAR ──────────────────────────────────────────────────
@@ -461,14 +461,19 @@
   }
   function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
 
-  function submitPaper() {
+  async function submitPaper() {
     saveCurrentInteger();
     attempt.answers = answers;
     attempt.states = states;
     attempt.submitted = true;
     attempt.submittedAt = Date.now();
     attempt.scores = Storage.scoreAttempt(attempt, paper);
-    await Storage.saveAttempt(attempt);
+    try {
+      await Storage.saveAttempt(attempt);
+    } catch(e) {
+      alert('Error saving submission: ' + e.message);
+      return;
+    }
     clearInterval(timerInterval);
     location.href = `results.html?id=${paperId}&attempt=${attempt.id}`;
   }
