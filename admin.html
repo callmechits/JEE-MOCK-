@@ -99,7 +99,7 @@
 <body>
 
 <div id="login-wall">
-  <div class="login-box">
+  <div class="login-box" id="login-box-inner">
     <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
     <h2>Admin Panel</h2>
     <p>Enter the admin password to continue.</p>
@@ -107,8 +107,13 @@
     <button class="btn-primary" style="width:100%;" onclick="doLogin()">Login</button>
     <div id="login-err" style="color:#ef4444;font-size:0.8rem;margin-top:0.75rem;display:none;">Wrong password.</div>
   </div>
-</div>
 
+  <div class="login-box" id="device-blocked" style="display:none; border-color: #ef4444;">
+    <div style="font-size:2.5rem;margin-bottom:0.5rem;">🚫</div>
+    <h2 style="color:#ef4444;">Access Denied</h2>
+    <p style="margin-bottom:0;">Unauthorized device. You cannot access the admin panel from this device.</p>
+  </div>
+</div>
 <nav>
   <div class="nav-logo">JEE<span>ADV</span>26 <span style="font-size:0.68rem;color:var(--muted);margin-left:0.4rem;">ADMIN</span></div>
   <div class="nav-links"><a href="index.html">Back to Site</a></div>
@@ -409,19 +414,43 @@ async function hashPass(str) {
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
-async function doLogin(){
+// ── DEVICE TOKEN — only your device can access admin ──────
+const DEVICE_TOKEN = 'b32c21ac-9467-455d-bb7b-bc4e214d5def';
+
+function checkDevice() {
+  const saved = localStorage.getItem('jee_device_token');
+  if (saved !== DEVICE_TOKEN) {
+    // Hide login form, show blocked error
+    document.getElementById('login-box-inner').style.display = 'none';
+    document.getElementById('device-blocked').style.display = 'block';
+    return false;
+  }
+  return true;
+}
+
+// Check on page load
+document.addEventListener('DOMContentLoaded', checkDevice);
+
+document.getElementById('admin-pass').onkeydown = e => { if (e.key === 'Enter') doLogin(); };
+
+async function doLogin() {
+  if (!checkDevice()) return; // Extra check just in case
+
   const entered = document.getElementById('admin-pass').value;
   const enteredHash = await hashPass(entered);
   const s = Storage.getSettings();
-  // Support both legacy plaintext (first time) and hashed passwords
+  
   const storedHash = s.adminPassHash || await hashPass(s.adminPass || 'admin123');
-  if(enteredHash === storedHash){
-    // Migrate to hashed if still on plaintext
-    if(!s.adminPassHash){ s.adminPassHash = storedHash; delete s.adminPass; Storage.saveSettings(s); }
-    document.getElementById('login-wall').classList.add('hidden');init();
-  }else{
-    document.getElementById('login-err').style.display='block';
+  if (enteredHash === storedHash) {
+    if (!s.adminPassHash) { 
+      s.adminPassHash = storedHash; 
+      delete s.adminPass; 
+      Storage.saveSettings(s); 
+    }
+    document.getElementById('login-wall').classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
   }
 }
 
