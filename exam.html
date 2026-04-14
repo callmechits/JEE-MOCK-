@@ -207,7 +207,7 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=6"></script>
+<script src="js/storage.js?v=7"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const paperId = params.get('id');
@@ -224,8 +224,10 @@
       const now = Date.now();
       const start = new Date(paper.startTime).getTime();
       const end = new Date(paper.endTime).getTime();
+      const entryWindowEnd = start + 30 * 60 * 1000; // 30 min entry window
       if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
       if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
+      if (now > entryWindowEnd) { alert('The 30-minute entry window has closed. You can no longer start this exam.'); location.href=`results.html?id=${paperId}`; return; }
       if (!paper.questions || paper.questions.length === 0) {
         alert('This paper has no questions yet! Add questions in the Admin panel first.');
         location.href='index.html'; return;
@@ -301,9 +303,10 @@
 
   // ── TIMER ────────────────────────────────────────────────────
   function startTimer() {
-    const end = new Date(paper.endTime).getTime();
+    // Each student gets exactly 3 hours from when THEY started
+    const personalEnd = attempt.startedAt + (3 * 60 * 60 * 1000);
     timerInterval = setInterval(() => {
-      const rem = Math.max(0, end - Date.now());
+      const rem = Math.max(0, personalEnd - Date.now());
       const h = Math.floor(rem/3600000), m = Math.floor((rem%3600000)/60000), s = Math.floor((rem%60000)/1000);
       const box = document.getElementById('timer-box');
       box.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
