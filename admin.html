@@ -99,21 +99,25 @@
 <body>
 
 <div id="login-wall">
-  <div class="login-box" id="login-box-inner">
+  <!-- DEVICE BLOCKED SCREEN -->
+  <div id="device-blocked" style="position:fixed;inset:0;background:#0a0e17;z-index:600;display:none;align-items:center;justify-content:center;">
+    <div style="text-align:center;color:#64748b;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🚫</div>
+      <div style="font-size:1rem;color:#e2e8f0;">Access denied.</div>
+      <div style="font-size:0.8rem;margin-top:0.5rem;">This panel is restricted to authorised devices only.</div>
+    </div>
+  </div>
+
+  <div class="login-box">
     <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
     <h2>Admin Panel</h2>
     <p>Enter the admin password to continue.</p>
     <input type="password" id="admin-pass" class="form-input" placeholder="Password" style="margin-bottom:1rem;" autocomplete="off"/>
-    <button class="btn-primary" style="width:100%;" onclick="doLogin()">Login</button>
+    <button class="btn-primary" style="width:100%;" id="login-btn">Login</button>
     <div id="login-err" style="color:#ef4444;font-size:0.8rem;margin-top:0.75rem;display:none;">Wrong password.</div>
   </div>
-
-  <div class="login-box" id="device-blocked" style="display:none; border-color: #ef4444;">
-    <div style="font-size:2.5rem;margin-bottom:0.5rem;">🚫</div>
-    <h2 style="color:#ef4444;">Access Denied</h2>
-    <p style="margin-bottom:0;">Unauthorized device. You cannot access the admin panel from this device.</p>
-  </div>
 </div>
+
 <nav>
   <div class="nav-logo">JEE<span>ADV</span>26 <span style="font-size:0.68rem;color:var(--muted);margin-left:0.4rem;">ADMIN</span></div>
   <div class="nav-links"><a href="index.html">Back to Site</a></div>
@@ -156,6 +160,10 @@
         <div class="form-group" style="margin-top:1rem;">
           <label class="form-label">Description (optional)</label>
           <textarea class="form-textarea" id="cp-desc" placeholder="Topics covered, difficulty level, etc."></textarea>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">Entry Window <span style="font-weight:400;text-transform:none;font-size:0.7rem;">— how long students can start the exam after it opens (minutes)</span></label>
+          <input type="number" class="form-input" id="cp-entry-window" value="30" min="1" max="180" style="width:120px;"/>
         </div>
         <button class="btn-primary" style="margin-top:0.5rem;" onclick="createPaper()">Create Paper</button>
         <button style="margin-top:0.5rem;margin-left:0.5rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.75rem 1rem;border-radius:4px;font-size:0.82rem;cursor:pointer;font-family:inherit;" onclick="diagnoseFetch()">🔍 Diagnose Connection</button>
@@ -334,20 +342,15 @@
 
     <div class="panel" id="panel-settings">
       <div class="panel-title"><span>⚙️</span> Settings</div>
-
-      <!-- SUPABASE CONFIG -->
       <div class="gs-box">
         <div style="font-weight:700;margin-bottom:0.25rem;color:var(--accent);font-size:0.95rem;">🗄️ Supabase — Free Database Setup</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">One-time setup. Scores sync live across all users worldwide.</div>
-
-        <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project (choose any region close to India).</div></div>
-        <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Wait ~2 min for it to load. Then go to <b>Project Settings → API</b>. Copy the <b>Project URL</b> and <b>anon public</b> key. Paste both below.</div></div>
-        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">In Supabase go to <b>SQL Editor → New Query</b>. Open the file <code>SETUP.sql</code> from your project folder, paste its contents, click <b>Run</b>.</div></div>
-        <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Go to <b>Storage → New Bucket</b>. Name it <code>question-images</code>. Toggle <b>Public bucket = ON</b>. Click Create.</div></div>
-        <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click <b>Test Connection</b> below. If it says Connected — you're done!</div></div>
-
+        <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project.</div></div>
+        <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Project Settings → API → copy <b>Project URL</b> and <b>anon public</b> key.</div></div>
+        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">SQL Editor → New Query → paste <code>SETUP.sql</code> → Run.</div></div>
+        <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Storage → New Bucket → name: <code>question-images</code> → Public ON → Create.</div></div>
+        <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click Test Connection below.</div></div>
         <div id="sb-status" style="margin-bottom:1rem;"></div>
-
         <div class="form-group">
           <label class="form-label">Supabase Project URL</label>
           <input type="text" class="form-input" id="sb-url" placeholder="https://xyzxyz.supabase.co"/>
@@ -362,8 +365,6 @@
         </div>
         <div id="sb-msg" style="margin-top:0.75rem;"></div>
       </div>
-
-      <!-- ADMIN PASSWORD -->
       <div class="form-card">
         <div class="form-group">
           <label class="form-label">Change Admin Password</label>
@@ -372,29 +373,18 @@
         <button class="btn-primary" onclick="changePass()">Update Password</button>
         <div id="pass-msg" style="margin-top:0.5rem;"></div>
       </div>
-
-      <!-- DANGER ZONE -->
       <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:1.5rem;">
         <div style="font-weight:700;color:#ef4444;margin-bottom:0.2rem;font-size:0.9rem;">🧨 Danger Zone</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem;">For testing only. Remove this section before going live.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem;">For testing only.</div>
         <div style="display:flex;flex-direction:column;gap:0.6rem;">
-
           <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
-            <div>
-              <div style="font-size:0.85rem;font-weight:600;">Delete all attempts</div>
-              <div style="font-size:0.72rem;color:var(--muted);">Clears all scores and leaderboard. Papers stay intact.</div>
-            </div>
+            <div><div style="font-size:0.85rem;font-weight:600;">Delete all attempts</div><div style="font-size:0.72rem;color:var(--muted);">Clears all scores and leaderboard. Papers stay intact.</div></div>
             <button onclick="flushAttempts()" style="background:#ef4444;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Delete Attempts</button>
           </div>
-
           <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
-            <div>
-              <div style="font-size:0.85rem;font-weight:600;">Full reset — delete everything</div>
-              <div style="font-size:0.72rem;color:var(--muted);">Wipes all papers AND attempts from the database.</div>
-            </div>
+            <div><div style="font-size:0.85rem;font-weight:600;">Full reset — delete everything</div><div style="font-size:0.72rem;color:var(--muted);">Wipes all papers AND attempts.</div></div>
             <button onclick="flushAll()" style="background:#7f1d1d;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Full Reset</button>
           </div>
-
         </div>
         <div id="flush-msg" style="margin-top:0.75rem;"></div>
       </div>
@@ -403,67 +393,63 @@
   </div>
 </div>
 
-<script src="js/storage.js?v=7"></script>
+<script src="js/storage.js?v=8"></script>
 <script>
 let currentSubject='physics',currentType='scq',selectedCorrect=[];
 const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
 
-// Hash password using SHA-256 — never store or compare plaintext
-async function hashPass(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+async function hashPass(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
 // ── DEVICE TOKEN — only your device can access admin ──────
-const DEVICE_TOKEN = 'b32c21ac-9467-455d-bb7b-bc4e214d5def';
+// Step 1: Open browser console, run: crypto.randomUUID()
+// Step 2: Paste the result below as DEVICE_TOKEN
+// Step 3: In your browser console run:
+//         localStorage.setItem('jee_device_token', 'SAME_UUID_HERE')
+// Step 4: Upload this file. Only your browser can access admin now.
+const DEVICE_TOKEN = 'PASTE_YOUR_UUID_HERE';
 
-function checkDevice() {
-  const saved = localStorage.getItem('jee_device_token');
-  if (saved !== DEVICE_TOKEN) {
-    // Hide login form, show blocked error
-    document.getElementById('login-box-inner').style.display = 'none';
-    document.getElementById('device-blocked').style.display = 'block';
+function checkDevice(){
+  const saved=localStorage.getItem('jee_device_token');
+  if(saved!==DEVICE_TOKEN){
+    document.getElementById('login-wall').style.display='none';
+    const blocked=document.getElementById('device-blocked');
+    blocked.style.display='flex';
     return false;
   }
   return true;
 }
 
-// Check on page load
-document.addEventListener('DOMContentLoaded', checkDevice);
+document.addEventListener('DOMContentLoaded',checkDevice);
+document.getElementById('login-btn').onclick=doLogin;
+document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
 
-document.getElementById('admin-pass').onkeydown = e => { if (e.key === 'Enter') doLogin(); };
-
-async function doLogin() {
-  if (!checkDevice()) return; // Extra check just in case
-
-  const entered = document.getElementById('admin-pass').value;
-  const enteredHash = await hashPass(entered);
-  const s = Storage.getSettings();
-  
-  const storedHash = s.adminPassHash || await hashPass(s.adminPass || 'admin123');
-  if (enteredHash === storedHash) {
-    if (!s.adminPassHash) { 
-      s.adminPassHash = storedHash; 
-      delete s.adminPass; 
-      Storage.saveSettings(s); 
-    }
-    document.getElementById('login-wall').classList.add('hidden');
-    init();
-  } else {
-    document.getElementById('login-err').style.display = 'block';
+async function doLogin(){
+  if(!checkDevice())return;
+  const entered=document.getElementById('admin-pass').value;
+  const enteredHash=await hashPass(entered);
+  // SHA-256 of 'admin123' — hardcoded default, same on every device
+  const DEFAULT_HASH='240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+  const s=Storage.getSettings();
+  const storedHash=s.adminPassHash||DEFAULT_HASH;
+  if(enteredHash===storedHash){
+    document.getElementById('login-wall').classList.add('hidden');init();
+  }else{
+    document.getElementById('login-err').style.display='block';
   }
 }
 
 async function init(){
   await renderPapers();await populatePaperDropdown();
-  // Prefill Supabase fields
   const sbUrl=localStorage.getItem('jee_sb_url')||'';
   const sbAnon=localStorage.getItem('jee_sb_anon')||'';
   if(sbUrl)document.getElementById('sb-url').value=sbUrl;
   if(sbAnon)document.getElementById('sb-anon').value=sbAnon;
   if(!Storage.isConfigured()){
-    document.getElementById('sb-status').innerHTML='<div class="notice" style="margin-bottom:0;">Supabase not configured yet. Go to Settings to connect your database before adding papers.</div>';
-  } else {
+    document.getElementById('sb-status').innerHTML='<div class="notice" style="margin-bottom:0;">Supabase not configured yet.</div>';
+  }else{
     document.getElementById('sb-status').innerHTML='<div class="success" style="margin-bottom:0;">Supabase configured. Click Test Connection to verify.</div>';
   }
   const now=new Date(),pad=n=>String(n).padStart(2,'0');
@@ -499,7 +485,6 @@ function toggleCorrect(label,el){
   else{const idx=selectedCorrect.indexOf(label);if(idx>=0){selectedCorrect.splice(idx,1);el.classList.remove('selected');}else{selectedCorrect.push(label);el.classList.add('selected');}}
 }
 
-// Image compression
 function compressImage(dataUrl,maxW=900,quality=0.72){
   return new Promise(resolve=>{
     const img=new Image();
@@ -513,7 +498,6 @@ function compressImage(dataUrl,maxW=900,quality=0.72){
     };img.src=dataUrl;
   });
 }
-
 function showInZone(zone,dataUrl){
   imgStore[zone]=dataUrl;
   const inner=document.getElementById(`pz-${zone}-inner`);
@@ -558,8 +542,6 @@ async function onDrop(e,zone){
   reader.onload=async ev=>{const c=await compressImage(ev.target.result);if(zone.startsWith('opt'))showInOptZone(zone,c);else showInZone(zone,c);};
   reader.readAsDataURL(file);
 }
-
-// Global paste — goes to question zone by default
 let pasteTarget='question';
 document.getElementById('pz-solution').addEventListener('mouseenter',()=>pasteTarget='solution');
 document.getElementById('pz-question').addEventListener('mouseenter',()=>pasteTarget='question');
@@ -578,16 +560,45 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key==='Enter'&&document.getElementById('panel-add-question').classList.contains('active')){addQuestion();}
 });
 
-// PAPERS
 async function renderPapers(){
   const container=document.getElementById('papers-list');
   container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">Loading...</p>';
   const papers=await Storage.getPapers();
   if(!papers.length){container.innerHTML='<p style="color:var(--muted);font-size:0.85rem;">No papers yet. Create one!</p>';return;}
-  container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Window</th><th>Questions</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
+  container.innerHTML=`<table class="ptable"><thead><tr><th>#</th><th>Title</th><th>Start</th><th>End</th><th>Entry Window</th><th>Qs</th><th>Actions</th></tr></thead><tbody>${papers.map((p,i)=>{
     const s=new Date(p.startTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
     const e2=new Date(p.endTime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
-    return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td><td><strong>${p.title}</strong></td><td style="font-size:0.78rem;color:var(--muted);">${s} → ${e2}</td><td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td><td><div style="display:flex;gap:0.4rem;"><button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button><button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button></div></td></tr>`;
+    const ew=p.entryWindow||30;
+    const now=Date.now(),pStart=new Date(p.startTime).getTime(),pEnd=new Date(p.endTime).getTime();
+    const isLive=now>=pStart&&now<=pEnd;
+    return `<tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td>
+      <td><strong>${p.title}</strong>${isLive?'<span style="margin-left:0.4rem;font-size:0.65rem;background:rgba(255,107,53,0.2);color:#ff6b35;padding:0.1rem 0.4rem;border-radius:2px;">LIVE</span>':''}</td>
+      <td style="font-size:0.78rem;color:var(--muted);">${s}</td>
+      <td style="font-size:0.78rem;color:var(--muted);">${e2}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;">${ew} min</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td>
+      <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button>
+        <button class="btn-small" style="background:#f59e0b;color:#000;" onclick="openEditTiming('${p.id}')">Edit Timing</button>
+        <button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button>
+      </div></td>
+    </tr>
+    <tr id="edit-timing-row-${p.id}" style="display:none;">
+      <td colspan="7" style="padding:1rem;background:#0f172a;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+          <div><div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em;">Start Time</div>
+            <input type="datetime-local" id="et-start-${p.id}" class="form-input" style="width:auto;" value="${toDatetimeLocal(p.startTime)}"/></div>
+          <div><div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em;">End Time</div>
+            <input type="datetime-local" id="et-end-${p.id}" class="form-input" style="width:auto;" value="${toDatetimeLocal(p.endTime)}"/></div>
+          <div><div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em;">Entry Window (mins)</div>
+            <input type="number" id="et-ew-${p.id}" class="form-input" style="width:100px;" value="${ew}" min="1" max="180"/></div>
+          <button class="btn-primary" onclick="saveEditTiming('${p.id}')">Save Changes</button>
+          <button class="btn-small" style="background:transparent;border:1px solid var(--border);color:var(--muted);" onclick="closeEditTiming('${p.id}')">Cancel</button>
+          <div id="et-msg-${p.id}" style="font-size:0.8rem;"></div>
+        </div>
+      </td>
+    </tr>`;
   }).join('')}</tbody></table>`;
 }
 async function populatePaperDropdown(){
@@ -596,8 +607,7 @@ async function populatePaperDropdown(){
   const prev=sel.value;
   sel.innerHTML=papers.length?papers.map(p=>`<option value="${p.id}">${p.title}</option>`).join(''):'<option value="">No papers yet — create one first</option>';
   if(prev&&papers.find(p=>p.id===prev))sel.value=prev;
-  await renderQuestionList();
-  await onPaperChange();
+  await renderQuestionList();await onPaperChange();
 }
 async function onPaperChange(){
   const paperId=document.getElementById('aq-paper').value;
@@ -608,7 +618,7 @@ async function onPaperChange(){
   await renderQuestionList();
 }
 async function createPaper(){
-  if(!Storage.isConfigured()){showMsg('cp-msg','⚠️ Supabase not configured. Go to Settings tab first and save your URL + key.','error');return;}
+  if(!Storage.isConfigured()){showMsg('cp-msg','⚠️ Supabase not configured. Go to Settings tab first.','error');return;}
   const title=document.getElementById('cp-title').value.trim();
   const start=document.getElementById('cp-start').value;
   const end=document.getElementById('cp-end').value;
@@ -616,29 +626,24 @@ async function createPaper(){
   if(new Date(end)<=new Date(start)){showMsg('cp-msg','End must be after start.','error');return;}
   const btn=document.querySelector('#panel-create-paper .btn-primary');
   btn.disabled=true;btn.textContent='Saving...';
-  try {
+  try{
     const papers=await Storage.getPapers();
-    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:new Date().toISOString()};
+    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:new Date().toISOString(),entryWindow:parseInt(document.getElementById('cp-entry-window').value)||30};
     await Storage.savePaper(paper);
     showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
     document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
     await renderPapers();await populatePaperDropdown();
-  } catch(e) {
-    showMsg('cp-msg',`Error: ${e.message}`,'error');
-  } finally {
-    btn.disabled=false;btn.textContent='Create Paper';
-  }
+  }catch(e){showMsg('cp-msg',`Error: ${e.message}`,'error');}
+  finally{btn.disabled=false;btn.textContent='Create Paper';}
 }
 async function deletePaper(id){
   if(!confirm('Delete this paper?'))return;
-  await Storage.deletePaper(id);
-  await renderPapers();await populatePaperDropdown();
+  await Storage.deletePaper(id);await renderPapers();await populatePaperDropdown();
 }
 function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-paper').value=id;onPaperChange();}
 
-// ADD QUESTION
 async function addQuestion(){
-  if(!Storage.isConfigured()){showMsg('aq-msg','⚠️ Supabase not configured. Go to Settings tab first.','error');return;}
+  if(!Storage.isConfigured()){showMsg('aq-msg','⚠️ Supabase not configured.','error');return;}
   const paperId=document.getElementById('aq-paper').value;
   if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
   const body=document.getElementById('aq-body').value.trim();
@@ -654,7 +659,7 @@ async function addQuestion(){
   }
   const btn=document.getElementById('btn-add-q');
   btn.disabled=true;btn.textContent='Saving...';
-  try {
+  try{
     const paper=await Storage.getPaper(paperId);
     const options=['A','B','C','D'].map(l=>document.getElementById(`opt-${l}`).value.trim());
     const optionImages=['A','B','C','D'].map(l=>imgStore[`opt${l}`]||null);
@@ -665,11 +670,8 @@ async function addQuestion(){
     showMsg('aq-msg',`Q${paper.questions.length} saved (${currentSubject}, ${currentType.toUpperCase()}).`,'success');
     resetForm();await renderQuestionList();await onPaperChange();
     setTimeout(()=>document.getElementById('aq-body').focus(),100);
-  } catch(e) {
-    showMsg('aq-msg',`Error saving: ${e.message}`,'error');
-  } finally {
-    btn.disabled=false;btn.textContent='Save Question & Next';
-  }
+  }catch(e){showMsg('aq-msg',`Error: ${e.message}`,'error');}
+  finally{btn.disabled=false;btn.textContent='Save Question & Next';}
 }
 
 function resetForm(){
@@ -727,124 +729,107 @@ function saveSupabase(){
 async function testSupabase(){
   const statusEl=document.getElementById('sb-status');
   statusEl.innerHTML='<div class="notice" style="margin-bottom:0;">Testing...</div>';
-  try {
+  try{
     await Storage.getPapers();
-    statusEl.innerHTML='<div class="success" style="margin-bottom:0;">Connected to Supabase! Database is working.</div>';
-  } catch(e) {
-    statusEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Connection failed: ${e.message}<br/>Check your URL and key, and make sure you ran SETUP.sql.</div>`;
+    statusEl.innerHTML='<div class="success" style="margin-bottom:0;">Connected to Supabase!</div>';
+  }catch(e){
+    statusEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Connection failed: ${e.message}</div>`;
   }
 }
 async function changePass(){
   const p=document.getElementById('new-pass').value.trim();
   if(p.length<4){showMsg('pass-msg','Too short.','error');return;}
   const s=Storage.getSettings();
-  s.adminPassHash = await hashPass(p);
-  delete s.adminPass; // remove any old plaintext
+  s.adminPassHash=await hashPass(p);
+  delete s.adminPass;
   Storage.saveSettings(s);
   showMsg('pass-msg','Password updated.','success');
 }
 
 async function flushAttempts(){
-  if(!confirm('Delete ALL attempts and scores? This cannot be undone.'))return;
+  if(!confirm('Delete ALL attempts and scores?'))return;
   const msgEl=document.getElementById('flush-msg');
   msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting...</div>';
   try{
-    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
-    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{
-      method:'DELETE',
-      headers:{'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`}
-    });
+    const url=localStorage.getItem('jee_sb_url');
+    const anon=localStorage.getItem('jee_sb_anon');
+    const res=await fetch(`${url}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers:{'apikey':anon,'Authorization':`Bearer ${anon}`}});
     if(!res.ok)throw new Error(await res.text());
     localStorage.removeItem('jee_attempts');
-    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">All attempts deleted. Leaderboard is now empty.</div>';
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">All attempts deleted.</div>';
     renderPapers();
   }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
 }
-
 async function flushAll(){
-  if(!confirm('DELETE EVERYTHING? All papers and all attempts will be permanently wiped.'))return;
-  if(!confirm('Are you really sure? This is irreversible.'))return;
+  if(!confirm('DELETE EVERYTHING?'))return;
+  if(!confirm('Really sure? Irreversible.'))return;
   const msgEl=document.getElementById('flush-msg');
   msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting everything...</div>';
   try{
-    const SUPABASE_URL=localStorage.getItem('jee_sb_url');
-    const SUPABASE_ANON=localStorage.getItem('jee_sb_anon');
-    const headers={'apikey':SUPABASE_ANON,'Authorization':`Bearer ${SUPABASE_ANON}`};
-    // Delete attempts first (FK constraint), then papers
-    await fetch(`${SUPABASE_URL}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers});
-    await fetch(`${SUPABASE_URL}/rest/v1/papers?id=neq.null`,{method:'DELETE',headers});
-    localStorage.removeItem('jee_attempts');
-    localStorage.removeItem('jee_papers');
-    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">Full reset done. Database is empty.</div>';
+    const url=localStorage.getItem('jee_sb_url');
+    const anon=localStorage.getItem('jee_sb_anon');
+    const h={'apikey':anon,'Authorization':`Bearer ${anon}`};
+    await fetch(`${url}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers:h});
+    await fetch(`${url}/rest/v1/papers?id=neq.null`,{method:'DELETE',headers:h});
+    localStorage.removeItem('jee_attempts');localStorage.removeItem('jee_papers');
+    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">Full reset done.</div>';
     renderPapers();populatePaperDropdown();
   }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
 }
 
 async function diagnoseFetch(){
-  const msgEl = document.getElementById('cp-msg');
-  const url = localStorage.getItem('jee_sb_url')||'';
-  const anon = localStorage.getItem('jee_sb_anon')||'';
-  msgEl.innerHTML = `<div class="notice">Running diagnostics...</div>`;
-
-  const lines = [];
-  lines.push(`URL: ${url ? url.slice(0,40)+'...' : '❌ EMPTY'}`);
-  lines.push(`Key: ${anon ? anon.slice(0,20)+'...' : '❌ EMPTY'}`);
-
-  if (!url || !url.startsWith('https://')) {
-    lines.push('❌ URL invalid — must start with https://');
-    msgEl.innerHTML = `<div class="notice">${lines.join('<br/>')}</div>`; return;
-  }
-  if (!anon) {
-    lines.push('❌ Anon key is empty');
-    msgEl.innerHTML = `<div class="notice">${lines.join('<br/>')}</div>`; return;
-  }
-
-  // Try a simple GET to the papers table
-  try {
-    const res = await fetch(`${url}/rest/v1/papers?limit=1`, {
-      headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json' }
-    });
-    if (res.ok) {
-      lines.push('✅ GET /papers — Success! Connection is working.');
-      lines.push('If Create Paper still fails, the issue is with INSERT permissions (RLS policy).');
-      lines.push('Make sure you ran SETUP.sql in Supabase SQL Editor.');
-    } else {
-      const body = await res.text();
-      lines.push(`❌ GET /papers returned ${res.status}: ${body}`);
-      if (res.status === 401) lines.push('→ Your anon key is wrong. Copy it again from Supabase → Settings → API.');
-      if (res.status === 404) lines.push('→ URL is wrong or the "papers" table doesn\'t exist. Run SETUP.sql.');
-    }
-  } catch(e) {
-    lines.push(`❌ Network error: ${e.message}`);
-    lines.push('Possible causes:');
-    lines.push('1. Wrong Supabase URL (copy exactly from Settings → API)');
-    lines.push('2. You\'re on a network that blocks external requests');
-    lines.push('3. Supabase project is paused (free tier pauses after inactivity — go to supabase.com and unpause it)');
-  }
-
-  // Try POST (upsert) to diagnose write permissions
-  try {
-    const res = await fetch(`${url}/rest/v1/papers`, {
-      method: 'POST',
-      headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({id:'diag-test',title:'diag',start_time:'2025-01-01T00:00:00Z',end_time:'2025-01-01T03:00:00Z',number:0,description:'',questions:[],created_at:'2025-01-01T00:00:00Z'})
-    });
-    if (res.ok || res.status === 204 || res.status === 201) {
+  const msgEl=document.getElementById('cp-msg');
+  const url=localStorage.getItem('jee_sb_url')||'';
+  const anon=localStorage.getItem('jee_sb_anon')||'';
+  msgEl.innerHTML=`<div class="notice">Running diagnostics...</div>`;
+  const lines=[];
+  lines.push(`URL: ${url?url.slice(0,40)+'...':'❌ EMPTY'}`);
+  lines.push(`Key: ${anon?anon.slice(0,20)+'...':'❌ EMPTY'}`);
+  if(!url||!url.startsWith('https://')){lines.push('❌ URL invalid');msgEl.innerHTML=`<div class="notice">${lines.join('<br/>')}</div>`;return;}
+  if(!anon){lines.push('❌ Anon key empty');msgEl.innerHTML=`<div class="notice">${lines.join('<br/>')}</div>`;return;}
+  try{
+    const res=await fetch(`${url}/rest/v1/papers?limit=1`,{headers:{'apikey':anon,'Authorization':`Bearer ${anon}`,'Content-Type':'application/json'}});
+    if(res.ok){lines.push('✅ GET /papers — Connection working!');}
+    else{const b=await res.text();lines.push(`❌ GET ${res.status}: ${b}`);}
+  }catch(e){lines.push(`❌ Network error: ${e.message}`);}
+  try{
+    const res=await fetch(`${url}/rest/v1/papers`,{method:'POST',headers:{'apikey':anon,'Authorization':`Bearer ${anon}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({id:'diag-test',title:'diag',start_time:'2025-01-01T00:00:00Z',end_time:'2025-01-01T03:00:00Z',number:0,description:'',questions:[],created_at:'2025-01-01T00:00:00Z'})});
+    if(res.ok||res.status===204||res.status===201){
       lines.push('✅ POST /papers — Write permission works!');
-      // Clean up test row
-      await fetch(`${url}/rest/v1/papers?id=eq.diag-test`, { method:'DELETE', headers:{'apikey':anon,'Authorization':`Bearer ${anon}`} });
-      lines.push('Create Paper should work now. Try again.');
-    } else {
-      const body = await res.text();
-      lines.push(`❌ POST /papers returned ${res.status}: ${body}`);
-      lines.push('→ RLS policy not set. Re-run SETUP.sql in Supabase SQL Editor.');
-    }
-  } catch(e) {
-    lines.push(`❌ POST failed: ${e.message}`);
-  }
+      await fetch(`${url}/rest/v1/papers?id=eq.diag-test`,{method:'DELETE',headers:{'apikey':anon,'Authorization':`Bearer ${anon}`}});
+    }else{const b=await res.text();lines.push(`❌ POST ${res.status}: ${b}`);}
+  }catch(e){lines.push(`❌ POST failed: ${e.message}`);}
+  msgEl.innerHTML=`<div class="notice" style="font-size:0.78rem;line-height:1.8;">${lines.join('<br/>')}</div>`;
+}
 
-  msgEl.innerHTML = `<div class="notice" style="font-size:0.78rem;line-height:1.8;">${lines.join('<br/>')}</div>`;
+function toDatetimeLocal(isoStr){
+  const d=new Date(isoStr);
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function openEditTiming(id){
+  document.getElementById(`edit-timing-row-${id}`).style.display='table-row';
+}
+function closeEditTiming(id){
+  document.getElementById(`edit-timing-row-${id}`).style.display='none';
+}
+async function saveEditTiming(id){
+  const start=document.getElementById(`et-start-${id}`).value;
+  const end=document.getElementById(`et-end-${id}`).value;
+  const ew=parseInt(document.getElementById(`et-ew-${id}`).value)||30;
+  const msgEl=document.getElementById(`et-msg-${id}`);
+  if(!start||!end){msgEl.innerHTML='<span style="color:#ffa07a;">Fill both times.</span>';return;}
+  if(new Date(end)<=new Date(start)){msgEl.innerHTML='<span style="color:#ffa07a;">End must be after start.</span>';return;}
+  msgEl.innerHTML='<span style="color:var(--muted);">Saving...</span>';
+  try{
+    const paper=await Storage.getPaper(id);
+    paper.startTime=new Date(start).toISOString();
+    paper.endTime=new Date(end).toISOString();
+    paper.entryWindow=ew;
+    await Storage.savePaper(paper);
+    msgEl.innerHTML='<span style="color:#4ade80;">✓ Saved!</span>';
+    setTimeout(()=>{ closeEditTiming(id); renderPapers(); },1000);
+  }catch(e){msgEl.innerHTML=`<span style="color:#ffa07a;">Error: ${e.message}</span>`;}
 }
 
 function showMsg(id,msg,type='success'){const el=document.getElementById(id);el.innerHTML=`<div class="${type==='success'?'success':'notice'}">${msg}</div>`;setTimeout(()=>{if(el)el.innerHTML='';},6000);}
