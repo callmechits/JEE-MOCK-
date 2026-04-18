@@ -77,7 +77,8 @@ const Cache = {
 // ── Helpers ──────────────────────────────────────────────────
 function normPaper(r) {
   return { id:r.id, title:r.title, startTime:r.start_time, endTime:r.end_time,
-           number:r.number, description:r.description, questions:r.questions||[], createdAt:r.created_at };
+           number:r.number, description:r.description, questions:r.questions||[], createdAt:r.created_at,
+           entryWindow:r.entry_window ?? 30, locked:!!r.locked };
 }
 function normAttempt(r) {
   return { id:r.id, paperId:r.paper_id, username:r.username,
@@ -174,6 +175,8 @@ const Storage = {
                   end_time: new Date(paper.endTime).toISOString(),
                   number:paper.number||1, description:paper.description||'',
                   questions:paper.questions||[],
+                  entry_window: Number.isFinite(Number(paper.entryWindow)) ? Number(paper.entryWindow) : 30,
+                  locked: !!paper.locked,
                   created_at: paper.createdAt ? new Date(paper.createdAt).toISOString() : new Date().toISOString() };
     await SB.upsert('papers', row);
     const norm = normPaper(row);
