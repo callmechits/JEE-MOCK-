@@ -224,10 +224,11 @@
       const now = Date.now();
       const start = new Date(paper.startTime).getTime();
       const end = new Date(paper.endTime).getTime();
-      const entryWindowEnd = start + 30 * 60 * 1000; // 30 min entry window
+      const entryWindowMins = paper.entryWindow || 30;
+      const entryWindowEnd = start + entryWindowMins * 60 * 1000;
       if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
       if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
-      if (now > entryWindowEnd) { alert('The 30-minute entry window has closed. You can no longer start this exam.'); location.href=`results.html?id=${paperId}`; return; }
+      if (now > entryWindowEnd) { alert(`The ${entryWindowMins}-minute entry window has closed. You can no longer start this exam.`); location.href=`results.html?id=${paperId}`; return; }
       if (!paper.questions || paper.questions.length === 0) {
         alert('This paper has no questions yet! Add questions in the Admin panel first.');
         location.href='index.html'; return;
