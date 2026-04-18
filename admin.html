@@ -373,20 +373,13 @@
         <button class="btn-primary" onclick="changePass()">Update Password</button>
         <div id="pass-msg" style="margin-top:0.5rem;"></div>
       </div>
-      <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:1.5rem;">
-        <div style="font-weight:700;color:#ef4444;margin-bottom:0.2rem;font-size:0.9rem;">🧨 Danger Zone</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem;">For testing only.</div>
-        <div style="display:flex;flex-direction:column;gap:0.6rem;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
-            <div><div style="font-size:0.85rem;font-weight:600;">Delete all attempts</div><div style="font-size:0.72rem;color:var(--muted);">Clears all scores and leaderboard. Papers stay intact.</div></div>
-            <button onclick="flushAttempts()" style="background:#ef4444;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Delete Attempts</button>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:#0f172a;border:1px solid rgba(239,68,68,0.15);border-radius:4px;flex-wrap:wrap;gap:0.5rem;">
-            <div><div style="font-size:0.85rem;font-weight:600;">Full reset — delete everything</div><div style="font-size:0.72rem;color:var(--muted);">Wipes all papers AND attempts.</div></div>
-            <button onclick="flushAll()" style="background:#7f1d1d;color:#fff;padding:0.45rem 1rem;border:none;border-radius:4px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Full Reset</button>
-          </div>
+      <div class="form-card" style="border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.04);">
+        <div style="font-weight:700;color:var(--green);margin-bottom:0.4rem;font-size:0.9rem;">✅ Safe Mode Enabled</div>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;">
+          Destructive admin controls (delete attempts/full reset) are disabled.
+          Your paper data and attempts stay protected.
         </div>
-        <div id="flush-msg" style="margin-top:0.75rem;"></div>
+      
       </div>
     </div>
 
@@ -573,15 +566,15 @@ async function renderPapers(){
     const isLive=now>=pStart&&now<=pEnd;
     return `<tr>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);">${i+1}</td>
-      <td><strong>${p.title}</strong>${isLive?'<span style="margin-left:0.4rem;font-size:0.65rem;background:rgba(255,107,53,0.2);color:#ff6b35;padding:0.1rem 0.4rem;border-radius:2px;">LIVE</span>':''}</td>
+      <td><strong>${p.title}</strong>${isLive?'<span style="margin-left:0.4rem;font-size:0.65rem;background:rgba(255,107,53,0.2);color:#ff6b35;padding:0.1rem 0.4rem;border-radius:2px;">LIVE</span>':''}${p.locked?'<span style="margin-left:0.4rem;font-size:0.65rem;background:rgba(34,197,94,0.2);color:#4ade80;padding:0.1rem 0.4rem;border-radius:2px;">LOCKED</span>':''}</td>
       <td style="font-size:0.78rem;color:var(--muted);">${s}</td>
       <td style="font-size:0.78rem;color:var(--muted);">${e2}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;">${ew} min</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${p.questions?.length||0}</td>
       <td><div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-        <button class="btn-small" onclick="jumpToEdit('${p.id}')">Add Qs</button>
-        <button class="btn-small" style="background:#f59e0b;color:#000;" onclick="openEditTiming('${p.id}')">Edit Timing</button>
-        <button class="btn-danger" onclick="deletePaper('${p.id}')">Delete</button>
+        <button class="btn-small" onclick="jumpToEdit('${p.id}')" ${p.locked?'disabled':''}>Add Qs</button>
+        <button class="btn-small" style="background:#f59e0b;color:#000;" onclick="openEditTiming('${p.id}')" ${p.locked?'disabled':''}>Edit Timing</button>
+        <button class="btn-small" style="background:${p.locked?'#475569':'#22c55e'};color:#fff;" onclick="lockPaper('${p.id}')" ${p.locked?'disabled':''}>${p.locked?'Locked':'Lock Exam'}</button>
       </div></td>
     </tr>
     <tr id="edit-timing-row-${p.id}" style="display:none;">
@@ -628,7 +621,7 @@ async function createPaper(){
   btn.disabled=true;btn.textContent='Saving...';
   try{
     const papers=await Storage.getPapers();
-    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:new Date().toISOString(),entryWindow:parseInt(document.getElementById('cp-entry-window').value)||30};
+    const paper={id:Storage.generateId(),title,startTime:new Date(start).toISOString(),endTime:new Date(end).toISOString(),description:document.getElementById('cp-desc').value.trim(),questions:[],number:papers.length+1,createdAt:new Date().toISOString(),entryWindow:parseInt(document.getElementById('cp-entry-window').value)||30,locked:false};
     await Storage.savePaper(paper);
     showMsg('cp-msg',`"${title}" created! Go to Add Questions.`,'success');
     document.getElementById('cp-title').value='';document.getElementById('cp-desc').value='';
@@ -637,6 +630,8 @@ async function createPaper(){
   finally{btn.disabled=false;btn.textContent='Create Paper';}
 }
 async function deletePaper(id){
+  const paper=await Storage.getPaper(id);
+  if(paper?.locked){alert('This exam is locked. You cannot delete it.');return;}
   if(!confirm('Delete this paper?'))return;
   await Storage.deletePaper(id);await renderPapers();await populatePaperDropdown();
 }
@@ -646,6 +641,8 @@ async function addQuestion(){
   if(!Storage.isConfigured()){showMsg('aq-msg','⚠️ Supabase not configured.','error');return;}
   const paperId=document.getElementById('aq-paper').value;
   if(!paperId){showMsg('aq-msg','Select a paper first.','error');return;}
+  const paper=await Storage.getPaper(paperId);
+  if(paper?.locked){showMsg('aq-msg','This exam is locked. Questions can no longer be changed.','error');return;}
   const body=document.getElementById('aq-body').value.trim();
   if(!body&&!imgStore.question){showMsg('aq-msg','Add question text or image.','error');return;}
   let correct=null;
@@ -660,7 +657,6 @@ async function addQuestion(){
   const btn=document.getElementById('btn-add-q');
   btn.disabled=true;btn.textContent='Saving...';
   try{
-    const paper=await Storage.getPaper(paperId);
     const options=['A','B','C','D'].map(l=>document.getElementById(`opt-${l}`).value.trim());
     const optionImages=['A','B','C','D'].map(l=>imgStore[`opt${l}`]||null);
     const q={id:Storage.generateId(),body,type:currentType,subject:currentSubject,correct,options:currentType!=='integer'?options:undefined,optionImages:currentType!=='integer'?optionImages:undefined,image:imgStore.question||null,solution:document.getElementById('aq-solution').value.trim()||null,solutionImage:imgStore.solution||null};
@@ -714,6 +710,7 @@ async function renderQuestionList(){
 async function deleteQuestion(paperId,idx){
   if(!confirm('Delete?'))return;
   const paper=await Storage.getPaper(paperId);
+  if(paper?.locked){showMsg('aq-msg','This exam is locked. Questions can no longer be changed.','error');return;}
   paper.questions.splice(idx,1);
   await Storage.savePaper(paper);
   await renderQuestionList();await onPaperChange();await renderPapers();
@@ -746,36 +743,6 @@ async function changePass(){
   showMsg('pass-msg','Password updated.','success');
 }
 
-async function flushAttempts(){
-  if(!confirm('Delete ALL attempts and scores?'))return;
-  const msgEl=document.getElementById('flush-msg');
-  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting...</div>';
-  try{
-    const url=localStorage.getItem('jee_sb_url');
-    const anon=localStorage.getItem('jee_sb_anon');
-    const res=await fetch(`${url}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers:{'apikey':anon,'Authorization':`Bearer ${anon}`}});
-    if(!res.ok)throw new Error(await res.text());
-    localStorage.removeItem('jee_attempts');
-    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">All attempts deleted.</div>';
-    renderPapers();
-  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
-}
-async function flushAll(){
-  if(!confirm('DELETE EVERYTHING?'))return;
-  if(!confirm('Really sure? Irreversible.'))return;
-  const msgEl=document.getElementById('flush-msg');
-  msgEl.innerHTML='<div class="notice" style="margin-bottom:0;">Deleting everything...</div>';
-  try{
-    const url=localStorage.getItem('jee_sb_url');
-    const anon=localStorage.getItem('jee_sb_anon');
-    const h={'apikey':anon,'Authorization':`Bearer ${anon}`};
-    await fetch(`${url}/rest/v1/attempts?id=neq.null`,{method:'DELETE',headers:h});
-    await fetch(`${url}/rest/v1/papers?id=neq.null`,{method:'DELETE',headers:h});
-    localStorage.removeItem('jee_attempts');localStorage.removeItem('jee_papers');
-    msgEl.innerHTML='<div class="success" style="margin-bottom:0;">Full reset done.</div>';
-    renderPapers();populatePaperDropdown();
-  }catch(e){msgEl.innerHTML=`<div class="notice" style="margin-bottom:0;">Error: ${e.message}</div>`;}
-}
 
 async function diagnoseFetch(){
   const msgEl=document.getElementById('cp-msg');
@@ -823,6 +790,7 @@ async function saveEditTiming(id){
   msgEl.innerHTML='<span style="color:var(--muted);">Saving...</span>';
   try{
     const paper=await Storage.getPaper(id);
+    if(paper?.locked){msgEl.innerHTML='<span style="color:#ffa07a;">This exam is locked.</span>';return;}
     paper.startTime=new Date(start).toISOString();
     paper.endTime=new Date(end).toISOString();
     paper.entryWindow=ew;
@@ -830,6 +798,16 @@ async function saveEditTiming(id){
     msgEl.innerHTML='<span style="color:#4ade80;">✓ Saved!</span>';
     setTimeout(()=>{ closeEditTiming(id); renderPapers(); },1000);
   }catch(e){msgEl.innerHTML=`<span style="color:#ffa07a;">Error: ${e.message}</span>`;}
+}
+  
+  async function lockPaper(id){
+  if(!confirm('Lock this exam? After locking, questions/timing cannot be changed.'))return;
+  const paper=await Storage.getPaper(id);
+  if(!paper)return;
+  paper.locked=true;
+  await Storage.savePaper(paper);
+  await renderPapers();
+  await populatePaperDropdown();
 }
 
 function showMsg(id,msg,type='success'){const el=document.getElementById(id);el.innerHTML=`<div class="${type==='success'?'success':'notice'}">${msg}</div>`;setTimeout(()=>{if(el)el.innerHTML='';},6000);}
