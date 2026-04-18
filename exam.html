@@ -224,7 +224,7 @@
       const now = Date.now();
       const start = new Date(paper.startTime).getTime();
       const end = new Date(paper.endTime).getTime();
-      const entryWindowMins = paper.entryWindow || 420;
+      const entryWindowMins = paper.entryWindow || 30;
       const entryWindowEnd = start + entryWindowMins * 60 * 1000;
       if (now < start) { alert('This exam hasn\'t started yet!'); location.href='index.html'; return; }
       if (now > end) { alert('This exam window has closed.'); location.href=`results.html?id=${paperId}`; return; }
