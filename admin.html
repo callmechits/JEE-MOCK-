@@ -575,6 +575,7 @@ async function renderPapers(){
         <button class="btn-small" onclick="jumpToEdit('${p.id}')" ${p.locked?'disabled':''}>Add Qs</button>
         <button class="btn-small" style="background:#f59e0b;color:#000;" onclick="openEditTiming('${p.id}')" ${p.locked?'disabled':''}>Edit Timing</button>
         <button class="btn-small" style="background:${p.locked?'#475569':'#22c55e'};color:#fff;" onclick="lockPaper('${p.id}')" ${p.locked?'disabled':''}>${p.locked?'Locked':'Lock Exam'}</button>
+        <button class="btn-danger" onclick="deletePaper('${p.id}')" ${p.locked?'disabled':''}>Delete Exam</button>
       </div></td>
     </tr>
     <tr id="edit-timing-row-${p.id}" style="display:none;">
@@ -633,7 +634,13 @@ async function deletePaper(id){
   const paper=await Storage.getPaper(id);
   if(paper?.locked){alert('This exam is locked. You cannot delete it.');return;}
   if(!confirm('Delete this paper?'))return;
-  await Storage.deletePaper(id);await renderPapers();await populatePaperDropdown();
+  try{
+    await Storage.deletePaper(id);
+    await renderPapers();
+    await populatePaperDropdown();
+  }catch(e){
+    alert(e.message||'Could not delete this exam.');
+  }
 }
 function jumpToEdit(id){showPanel('add-question');document.getElementById('aq-paper').value=id;onPaperChange();}
 
