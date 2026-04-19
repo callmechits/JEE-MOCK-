@@ -3,8 +3,8 @@
 // ═══════════════════════════════════════════════════════════
 
 // !! REPLACE THESE WITH YOUR ACTUAL VALUES !!
-const DEFAULT_URL  = 'https://lspzncyznzvqhzsinias.supabase.co';
-const DEFAULT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzcHpuY3l6bnp2cWh6c2luaWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDAwODUsImV4cCI6MjA4OTQxNjA4NX0.nanR2obAPQDQCJFXoWFZnMaBOZ18VMF-NVg7muZTaEA';
+const DEFAULT_URL  = 'https://cqhqexcqqjhdhemnydgs.supabase.co';
+const DEFAULT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxaHFleGNxcWpoZGhlbW55ZGdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NTc5OTgsImV4cCI6MjA5MjEzMzk5OH0.0xHgNncHb77nM6W9hB1RJy3yXXaglQc_J7wFaaumnA8';
 
 // Read from localStorage if set (admin panel), otherwise use defaults above
 function _url()  { return localStorage.getItem('jee_sb_url')  || DEFAULT_URL;  }
