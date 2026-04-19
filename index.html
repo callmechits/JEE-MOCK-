@@ -65,6 +65,8 @@
   .lb-total{font-family:'IBM Plex Mono',monospace;font-size:0.9rem;font-weight:700;text-align:center;}
   footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.8rem;}
   footer a{color:var(--accent2);text-decoration:none;}
+  .admin-easter-egg{color:inherit;text-decoration:none;opacity:0.9;transition:opacity 0.2s;}
+  .admin-easter-egg:hover{opacity:1;}
 </style>
 </head>
 <body>
@@ -74,7 +76,6 @@
     <a href="index.html" class="active">Home</a>
     <a href="leaderboard.html">Leaderboard</a>
     <a href="papers.html">All Papers</a>
-    <a href="admin.html">Admin</a>
   </div>
   <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank" class="nav-reddit">
     <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 0C4.478 0 0 4.478 0 10c0 5.523 4.478 10 10 10 5.523 0 10-4.477 10-10C20 4.478 15.523 0 10 0zm6.894 10c0 .8-.65 1.45-1.45 1.45-.39 0-.744-.155-1.005-.41-.99.714-2.364 1.174-3.886 1.226l.66 3.1 2.137-.454c.04-.54.49-.966 1.044-.966.58 0 1.05.47 1.05 1.05 0 .58-.47 1.05-1.05 1.05-.44 0-.82-.274-.984-.664l-2.39.507c-.07.016-.14-.024-.16-.092l-.737-3.46c-1.546-.04-2.94-.5-3.94-1.22-.26.258-.617.417-1.01.417-.8 0-1.45-.65-1.45-1.45 0-.59.355-1.098.87-1.325-.022-.16-.033-.322-.033-.486 0-2.44 2.84-4.42 6.34-4.42 3.5 0 6.34 1.98 6.34 4.42 0 .164-.01.326-.033.487.514.226.867.733.867 1.324zM7.5 9.25c-.58 0-1.05.47-1.05 1.05 0 .58.47 1.05 1.05 1.05.58 0 1.05-.47 1.05-1.05 0-.58-.47-1.05-1.05-1.05zm5 0c-.58 0-1.05.47-1.05 1.05 0 .58.47 1.05 1.05 1.05.58 0 1.05-.47 1.05-1.05 0-.58-.47-1.05-1.05-1.05zm-2.5 3.5c-.69 0-1.33-.176-1.78-.46-.1-.063-.13-.196-.066-.296.062-.1.196-.13.296-.067.37.232.924.373 1.55.373s1.18-.14 1.55-.373c.1-.063.234-.033.296.067.063.1.033.233-.066.296-.45.284-1.09.46-1.78.46z"/></svg>
@@ -116,8 +117,7 @@
     <div id="lb-preview"><div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">Loading...</div></div>
   </div>
 </div>
-<footer>Built for <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank">r/JEEAdv26dailyupdates</a> · Good luck with JEE 2026 🎯</footer>
-<script src="js/storage.js?v=3"></script>
+<footer>Built for <a href="https://reddit.com/r/JEEAdv26dailyupdates" target="_blank">r/JEEAdv26dailyupdates</a> · Good luck with JEE 2026 <a href="admin.html" class="admin-easter-egg" aria-label="Admin access">🎯</a></footer><script src="js/storage.js?v=3"></script>
 <script>
 function animateNum(el,target){let cur=0;const step=Math.max(1,Math.ceil(target/40));const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur;if(cur>=target)clearInterval(t);},40);}
 
