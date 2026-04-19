@@ -187,6 +187,8 @@ const Storage = {
     return norm;
   },
   async deletePaper(id) {
+    const paper = await this.getPaper(id);
+    if (paper?.locked) throw new Error('Locked exams cannot be deleted.');
     await SB.del('papers', {id});
     Cache.set('papers', (Cache.get('papers')||[]).filter(p=>p.id!==id));
   },
