@@ -99,15 +99,6 @@
 <body>
 
 <div id="login-wall">
-  <!-- DEVICE BLOCKED SCREEN -->
-  <div id="device-blocked" style="position:fixed;inset:0;background:#0a0e17;z-index:600;display:none;align-items:center;justify-content:center;">
-    <div style="text-align:center;color:#64748b;">
-      <div style="font-size:3rem;margin-bottom:1rem;">🚫</div>
-      <div style="font-size:1rem;color:#e2e8f0;">Access denied.</div>
-      <div style="font-size:0.8rem;margin-top:0.5rem;">This panel is restricted to authorised devices only.</div>
-    </div>
-  </div>
-
   <div class="login-box">
     <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
     <h2>Admin Panel</h2>
@@ -347,7 +338,7 @@
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">One-time setup. Scores sync live across all users worldwide.</div>
         <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project.</div></div>
         <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Project Settings → API → copy <b>Project URL</b> and <b>anon public</b> key.</div></div>
-        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">SQL Editor → New Query → paste <code>SETUP.sql</code> → Run.</div></div>
+        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">SQL Editor → New Query → paste <code>SETUP.sql</code> and the <code>admin_settings</code> table SQL shown below → Run.</div></div>
         <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Storage → New Bucket → name: <code>question-images</code> → Public ON → Create.</div></div>
         <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click Test Connection below.</div></div>
         <div id="sb-status" style="margin-bottom:1rem;"></div>
@@ -364,10 +355,30 @@
           <button class="btn-primary" style="background:#22c55e;" onclick="testSupabase()">Test Connection</button>
         </div>
         <div id="sb-msg" style="margin-top:0.75rem;"></div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">Admin Password Table SQL</label>
+          <textarea class="form-textarea" readonly style="min-height:120px;font-family:'IBM Plex Mono',monospace;">create table if not exists public.admin_settings (
+  id text primary key,
+  password_hash text not null,
+  updated_at timestamptz default now()
+);
+
+alter table public.admin_settings enable row level security;
+
+create policy "public read admin settings" on public.admin_settings
+for select to anon using (true);
+
+create policy "public upsert admin settings" on public.admin_settings
+for insert to anon with check (true);
+
+create policy "public update admin settings" on public.admin_settings
+for update to anon using (true) with check (true);</textarea>
+        </div>
+
       </div>
       <div class="form-card">
         <div class="form-group">
-          <label class="form-label">Change Admin Password</label>
+         <label class="form-label">Change Admin Password (stored in Supabase)</label>
           <input type="password" class="form-input" id="new-pass" placeholder="New password (min 4 chars)"/>
         </div>
         <button class="btn-primary" onclick="changePass()">Update Password</button>
@@ -396,40 +407,20 @@ async function hashPass(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── DEVICE TOKEN — only your device can access admin ──────
-// Step 1: Open browser console, run: crypto.randomUUID()
-// Step 2: Paste the result below as DEVICE_TOKEN
-// Step 3: In your browser console run:
-//         localStorage.setItem('jee_device_token', 'SAME_UUID_HERE')
-// Step 4: Upload this file. Only your browser can access admin now.
-const DEVICE_TOKEN = '1fbc6e12-f695-42de-bd49-cc4b63fee672';
 
-function checkDevice(){
-  const saved=localStorage.getItem('jee_device_token');
-  if(saved!==DEVICE_TOKEN){
-    document.getElementById('login-wall').style.display='none';
-    const blocked=document.getElementById('device-blocked');
-    blocked.style.display='flex';
-    return false;
-  }
-  return true;
-}
-
-document.addEventListener('DOMContentLoaded',checkDevice);
 document.getElementById('login-btn').onclick=doLogin;
 document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
 
 async function doLogin(){
-  if(!checkDevice())return;
   const entered=document.getElementById('admin-pass').value;
+  if(!entered){document.getElementById('login-err').textContent='Enter password.';document.getElementById('login-err').style.display='block';return;}
   const enteredHash=await hashPass(entered);
-  // SHA-256 of 'admin123' — hardcoded default, same on every device
-  const DEFAULT_HASH='240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
-  const s=Storage.getSettings();
-  const storedHash=s.adminPassHash||DEFAULT_HASH;
+  const auth=await Storage.getAdminAuth();
+  const storedHash=auth.passwordHash;
   if(enteredHash===storedHash){
     document.getElementById('login-wall').classList.add('hidden');init();
   }else{
+    document.getElementById('login-err').textContent='Wrong password.';
     document.getElementById('login-err').style.display='block';
   }
 }
@@ -743,12 +734,15 @@ async function testSupabase(){
 async function changePass(){
   const p=document.getElementById('new-pass').value.trim();
   if(p.length<4){showMsg('pass-msg','Too short.','error');return;}
-  const s=Storage.getSettings();
-  s.adminPassHash=await hashPass(p);
-  delete s.adminPass;
-  Storage.saveSettings(s);
-  showMsg('pass-msg','Password updated.','success');
-}
+   try{
+    const passwordHash=await hashPass(p);
+    await Storage.setAdminPasswordHash(passwordHash);
+    showMsg('pass-msg','Password updated in Supabase.','success');
+    document.getElementById('new-pass').value='';
+  }catch(e){
+    showMsg('pass-msg',`Could not update password in Supabase: ${e.message}`,'error');
+  }
+  }
 
 
 async function diagnoseFetch(){
