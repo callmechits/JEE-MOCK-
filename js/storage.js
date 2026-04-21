@@ -73,7 +73,7 @@ const Cache = {
   get: k => { try { return JSON.parse(localStorage.getItem('jee_'+k)); } catch { return null; } },
   set: (k, v) => localStorage.setItem('jee_'+k, JSON.stringify(v))
 };
-
+const DEFAULT_ADMIN_PASS_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // admin123
 // ── Helpers ──────────────────────────────────────────────────
 function normPaper(r) {
   return { id:r.id, title:r.title, startTime:r.start_time, endTime:r.end_time,
@@ -107,10 +107,24 @@ const Storage = {
     localStorage.setItem('jee_sb_anon', anon.trim());
   },
 
-  // ── Settings (local only — admin password) ─────────────
-  // These are SYNCHRONOUS — they only touch localStorage, not Supabase
-  getSettings()   { return Cache.get('settings') || { adminPass: 'admin123' }; },
-  saveSettings(s) { Cache.set('settings', s); },
+  // ── Admin auth (Supabase-backed with local fallback) ─────
+  async getAdminAuth() {
+    try {
+      const rows = await SB.select('admin_settings', 'id=eq.default&limit=1');
+      if (rows.length && rows[0].password_hash) {
+        const auth = { passwordHash: rows[0].password_hash };
+        Cache.set('admin_auth', auth);
+        return auth;
+      }
+    } catch (_) {}
+    return Cache.get('admin_auth') || { passwordHash: DEFAULT_ADMIN_PASS_HASH };
+  },
+  async setAdminPasswordHash(passwordHash) {
+    const row = { id: 'default', password_hash: passwordHash, updated_at: new Date().toISOString() };
+    await SB.upsert('admin_settings', row);
+    Cache.set('admin_auth', { passwordHash });
+    return true;
+  },
 
   // ── Utils ─────────────────────────────────────────────────
   generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); },
