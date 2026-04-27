@@ -73,7 +73,7 @@ const Cache = {
   get: k => { try { return JSON.parse(localStorage.getItem('jee_'+k)); } catch { return null; } },
   set: (k, v) => localStorage.setItem('jee_'+k, JSON.stringify(v))
 };
-const DEFAULT_ADMIN_PASS_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // admin123
+const DEFAULT_ADMIN_PASS_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
 // ── Helpers ──────────────────────────────────────────────────
 function normPaper(r) {
   return { id:r.id, title:r.title, startTime:r.start_time, endTime:r.end_time,
