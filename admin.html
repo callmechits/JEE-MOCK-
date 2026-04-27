@@ -414,13 +414,18 @@ document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin()
 async function doLogin(){
   const entered=document.getElementById('admin-pass').value;
   if(!entered){document.getElementById('login-err').textContent='Enter password.';document.getElementById('login-err').style.display='block';return;}
-  const enteredHash=await hashPass(entered);
-  const auth=await Storage.getAdminAuth();
-  const storedHash=auth.passwordHash;
-  if(enteredHash===storedHash){
-    document.getElementById('login-wall').classList.add('hidden');init();
-  }else{
-    document.getElementById('login-err').textContent='laude madarchod tmkc x4000';
+  try{
+    const enteredHash=await hashPass(entered);
+    const auth=await Storage.getAdminAuth();
+    const storedHash=auth.passwordHash;
+    if(enteredHash===storedHash){
+      document.getElementById('login-wall').classList.add('hidden');init();
+    }else{
+      document.getElementById('login-err').textContent='Wrong password.';
+      document.getElementById('login-err').style.display='block';
+    }
+  }catch(e){
+    document.getElementById('login-err').textContent=e.message||'Could not verify admin password from Supabase.';
     document.getElementById('login-err').style.display='block';
   }
 }
