@@ -338,7 +338,7 @@
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">One-time setup. Scores sync live across all users worldwide.</div>
         <div class="gs-step"><div class="gs-num">1</div><div class="gs-text">Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → Sign up free → New Project.</div></div>
         <div class="gs-step"><div class="gs-num">2</div><div class="gs-text">Project Settings → API → copy <b>Project URL</b> and <b>anon public</b> key.</div></div>
-        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">SQL Editor → New Query → paste <code>SETUP.sql</code> and the <code>admin_settings</code> table SQL shown below → Run.</div></div>
+        <div class="gs-step"><div class="gs-num">3</div><div class="gs-text">SQL Editor → New Query → run your setup SQL (tables + policies) from your private notes/docs.</div></div>
         <div class="gs-step"><div class="gs-num">4</div><div class="gs-text">Storage → New Bucket → name: <code>question-images</code> → Public ON → Create.</div></div>
         <div class="gs-step"><div class="gs-num">5</div><div class="gs-text">Click Test Connection below.</div></div>
         <div id="sb-status" style="margin-bottom:1rem;"></div>
@@ -356,7 +356,7 @@
         </div>
         <div id="sb-msg" style="margin-top:0.75rem;"></div>
         <div class="form-group" style="margin-top:1rem;">
-          <label class="form-label">Admin Password Table SQL</label>
+         <label class="form-label">Change Admin Password (stored in Supabase)</label>
           <textarea class="form-textarea" readonly style="min-height:120px;font-family:'IBM Plex Mono',monospace;">create table if not exists public.admin_settings (
   id text primary key,
   password_hash text not null,
