@@ -107,17 +107,20 @@ const Storage = {
     localStorage.setItem('jee_sb_anon', anon.trim());
   },
 
-  // ── Admin auth (Supabase-backed with local fallback) ─────
+ // ── Admin auth (Supabase-backed with local fallback) ─────
   async getAdminAuth() {
+    let rows = [];
     try {
-      const rows = await SB.select('admin_settings', 'id=eq.default&limit=1');
-      if (rows.length && rows[0].password_hash) {
-        const auth = { passwordHash: rows[0].password_hash };
-        Cache.set('admin_auth', auth);
-        return auth;
-      }
-    } catch (_) {}
-    return Cache.get('admin_auth') || { passwordHash: DEFAULT_ADMIN_PASS_HASH };
+      rows = await SB.select('admin_settings', 'id=eq.default&limit=1');
+    } catch (e) {
+      throw new Error(`Could not read admin_settings from Supabase: ${e.message}`);
+    }
+    if (!rows.length || !rows[0].password_hash) {
+      throw new Error('Admin password is not initialized in Supabase. Add row id="default" in admin_settings.');
+    }
+    const auth = { passwordHash: rows[0].password_hash };
+    Cache.set('admin_auth', auth);
+    return auth;
   },
   async setAdminPasswordHash(passwordHash) {
     const row = { id: 'default', password_hash: passwordHash, updated_at: new Date().toISOString() };
@@ -125,7 +128,7 @@ const Storage = {
     Cache.set('admin_auth', { passwordHash });
     return true;
   },
-
+  
   // ── Utils ─────────────────────────────────────────────────
   generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); },
 
