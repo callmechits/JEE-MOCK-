@@ -124,14 +124,15 @@ const Storage = {
         password_hash: bootstrapPasswordHash,
         updated_at: new Date().toISOString()
       };
-       try {
-      await SB.upsert('admin_settings', row);
-    } catch (e) {
-      if ((e.message || '').includes('row-level security policy')) {
-        throw new Error('RLS blocked admin password update. Create/allow upsert for admin_settings in SQL Editor.');
+         try {
+        await SB.upsert('admin_settings', seeded);
+      } catch (e) {
+        if ((e.message || '').includes('row-level security policy')) {
+          throw new Error('RLS blocked admin password update. Create/allow upsert for admin_settings in SQL Editor.');
+        }
+        throw e;
       }
-      throw e;
-    }
+     
       const auth = { passwordHash: bootstrapPasswordHash };
       Cache.set('admin_auth', auth);
       return auth;
