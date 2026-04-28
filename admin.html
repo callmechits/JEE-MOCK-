@@ -359,25 +359,63 @@
          <label class="form-label">Change Admin Password (stored in Supabase)</label>
           <textarea class="form-textarea" readonly style="min-height:120px;font-family:'IBM Plex Mono',monospace;">create table if not exists public.admin_settings (
   id text primary key,
-  password_hash text not null,
+  password_hash text not null, -- bcrypt hash
   updated_at timestamptz default now()
 );
 
 alter table public.admin_settings enable row level security;
 
-create policy "public read admin settings" on public.admin_settings
-for select to anon using (true);
+no direct read/write policies on admin_settings for anon
+-- (functions below run as SECURITY DEFINER)
 
-create policy "public upsert admin settings" on public.admin_settings
-for insert to anon with check (true);
+create or replace function public.verify_admin_password(p_plain text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_hash text;
+begin
+  select password_hash into v_hash from public.admin_settings where id='default';
+  if v_hash is null then
+    return false;
+  end if;
+  return crypt(p_plain, v_hash) = v_hash;
+end;
+$$;
 
-create policy "public update admin settings" on public.admin_settings
-for update to anon using (true) with check (true);</textarea>
+create or replace function public.change_admin_password(p_old text, p_new text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if length(coalesce(p_new,'')) < 4 then
+    return false;
+  end if;
+  if not public.verify_admin_password(p_old) then
+    return false;
+  end if;
+  update public.admin_settings
+  set password_hash = crypt(p_new, gen_salt('bf')),
+      updated_at = now()
+  where id='default';
+  return true;
+end;
+$$;
+
+grant execute on function public.verify_admin_password(text) to anon;
+grant execute on function public.change_admin_password(text,text) to anon;</textarea>
         </div>
 
       </div>
       <div class="form-card">
         <div class="form-group">
+          <label class="form-label">Current Admin Password</label>
+          <input type="password" class="form-input" id="old-pass" placeholder="Current password"/>
+        </div>
+        <div class="form-group" style="margin-top:0.75rem;">
          <label class="form-label">Change Admin Password (stored in Supabase)</label>
           <input type="password" class="form-input" id="new-pass" placeholder="New password (min 4 chars)"/>
         </div>
@@ -397,15 +435,11 @@ for update to anon using (true) with check (true);</textarea>
   </div>
 </div>
 
-<script src="js/storage.js?v=9"></script>
+<script src="js/storage.js?v=10"></script>
 <script>
 let currentSubject='physics',currentType='scq',selectedCorrect=[];
 const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
 
-async function hashPass(str){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
 
 
 document.getElementById('login-btn').onclick=doLogin;
@@ -414,21 +448,17 @@ document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin()
 async function doLogin(){
   const entered=document.getElementById('admin-pass').value;
   if(!entered){document.getElementById('login-err').textContent='Enter password.';document.getElementById('login-err').style.display='block';return;}
-  const enteredHash=await hashPass(entered);
-  try{
-    const auth=await Storage.getAdminAuth(enteredHash);
-    const storedHash=auth.passwordHash;
-    if(enteredHash===storedHash){
+   const ok=await Storage.verifyAdminPassword(entered);
+    if(ok){
       document.getElementById('login-wall').classList.add('hidden');init();
     }else{
       document.getElementById('login-err').textContent='Wrong password.';
       document.getElementById('login-err').style.display='block';
     }
   }catch(e){
-        let msg=e.message||'Could not verify admin password from Supabase.';
-    if(msg.includes('Admin password is not initialized in Supabase.')){
-      msg += ` SQL: insert into admin_settings (id, password_hash, updated_at) values ('default', '${enteredHash}', now()) on conflict (id) do update set password_hash=excluded.password_hash, updated_at=now();`;
-    }
+       let msg=e.message||'Could not verify admin password from Supabase.';
+    if(msg.includes('verify_admin_password')){
+      msg='Missing verify_admin_password RPC. Run the SQL in Settings (includes function + GRANT EXECUTE).';
     document.getElementById('login-err').textContent=msg;
     document.getElementById('login-err').style.display='block';
   }
@@ -741,22 +771,25 @@ async function testSupabase(){
   }
 }
 async function changePass(){
+  const oldP=document.getElementById('old-pass').value.trim();
   const p=document.getElementById('new-pass').value.trim();
+  if(oldP.length<1){showMsg('pass-msg','Enter current password.','error');return;}
   if(p.length<4){showMsg('pass-msg','Too short.','error');return;}
    try{
-    const passwordHash=await hashPass(p);
-    await Storage.setAdminPasswordHash(passwordHash);
+    const ok=await Storage.changeAdminPassword(oldP,p);
+    if(!ok){showMsg('pass-msg','Current password is wrong or new password is invalid.','error');return;}
     showMsg('pass-msg','Password updated in Supabase.','success');
+    document.getElementById('old-pass').value='';
     document.getElementById('new-pass').value='';
   }catch(e){
      const err=e.message||'';
-    if(err.includes('row-level security policy') || err.includes('RLS blocked')){
-      showMsg('pass-msg',`RLS blocked password update. Run this in Supabase SQL Editor: insert into admin_settings (id, password_hash, updated_at) values ('default', '${passwordHash}', now()) on conflict (id) do update set password_hash=excluded.password_hash, updated_at=now();`,'error');
-    }else{
-      showMsg('pass-msg',`Could not update password in Supabase: ${e.message}`,'error');
+    if(err.includes('change_admin_password')){
+      showMsg('pass-msg','Missing change_admin_password RPC. Run the SQL in Settings and retry.','error');
+   return;
     }
+  document.getElementById('old-pass').value='';
   }
-  }
+}
 
 
 async function diagnoseFetch(){
