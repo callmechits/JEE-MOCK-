@@ -45,6 +45,18 @@ const SB = {
     const text = await r.text();
     return text ? JSON.parse(text) : data;
   },
+  async rpc(fn, params = {}) {
+    this._check();
+    const r = await fetch(`${_url()}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: this.h,
+      body: JSON.stringify(params)
+    });
+    if (!r.ok) throw new Error(`Supabase RPC error (${r.status}): ${await r.text()}`);
+    if (r.status === 204) return null;
+    const text = await r.text();
+    return text ? JSON.parse(text) : null;
+  },
   async del(table, match) {
     this._check();
     const q = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
@@ -73,7 +85,7 @@ const Cache = {
   get: k => { try { return JSON.parse(localStorage.getItem('jee_'+k)); } catch { return null; } },
   set: (k, v) => localStorage.setItem('jee_'+k, JSON.stringify(v))
 };
-const DEFAULT_ADMIN_PASS_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+
 // ── Helpers ──────────────────────────────────────────────────
 function normPaper(r) {
   return { id:r.id, title:r.title, startTime:r.start_time, endTime:r.end_time,
@@ -107,49 +119,13 @@ const Storage = {
     localStorage.setItem('jee_sb_anon', anon.trim());
   },
 
- // ── Admin auth (Supabase-backed with local fallback) ─────
-   async getAdminAuth(bootstrapPasswordHash = null) {
-    let rows = [];
-    try {
-      rows = await SB.select('admin_settings', 'id=eq.default&limit=1');
-    } catch (e) {
-      throw new Error(`Could not read admin_settings from Supabase: ${e.message}`);
-    }
-    if (!rows.length || !rows[0].password_hash) {
-       if (!bootstrapPasswordHash) {
-         throw new Error('Admin password is not initialized in Supabase. Create row id="default" in admin_settings from Supabase SQL Editor (anon key cannot insert due RLS).');
-      }
-      const seeded = {
-        id: 'default',
-        password_hash: bootstrapPasswordHash,
-        updated_at: new Date().toISOString()
-      };
-          try {
-        await SB.upsert('admin_settings', seeded);
-      } catch (e) {
-        if ((e.message || '').includes('row-level security policy')) {
-          // If anon upsert is blocked by RLS, still allow this browser session to continue
-          // using the provided hash as a local fallback.
-          const auth = { passwordHash: bootstrapPasswordHash };
-          Cache.set('admin_auth', auth);
-          return auth;
-        }
-        throw e;
-        }
-       
-      const auth = { passwordHash: bootstrapPasswordHash };
-      Cache.set('admin_auth', auth);
-      return auth;
-    }
-    const auth = { passwordHash: rows[0].password_hash };
-    Cache.set('admin_auth', auth);
-    return auth;
-  },
-  async setAdminPasswordHash(passwordHash) {
-    const row = { id: 'default', password_hash: passwordHash, updated_at: new Date().toISOString() };
-    await SB.upsert('admin_settings', row);
-    Cache.set('admin_auth', { passwordHash });
-    return true;
+// ── Admin auth via Supabase RPC (no client-side hash compare) ─────
+  async verifyAdminPassword(password) {
+    const result = await SB.rpc('verify_admin_password', { p_plain: password });
+    return result === true;  },
+   async changeAdminPassword(oldPassword, newPassword) {
+    const result = await SB.rpc('change_admin_password', { p_old: oldPassword, p_new: newPassword });
+    return result === true;
   },
   
   // ── Utils ─────────────────────────────────────────────────
