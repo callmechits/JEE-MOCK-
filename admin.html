@@ -416,7 +416,7 @@ async function doLogin(){
   if(!entered){document.getElementById('login-err').textContent='Enter password.';document.getElementById('login-err').style.display='block';return;}
   try{
     const enteredHash=await hashPass(entered);
-    const auth=await Storage.getAdminAuth();
+    const auth=await Storage.getAdminAuth(enteredHash);
     const storedHash=auth.passwordHash;
     if(enteredHash===storedHash){
       document.getElementById('login-wall').classList.add('hidden');init();
