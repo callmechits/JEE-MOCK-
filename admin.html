@@ -414,8 +414,8 @@ document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin()
 async function doLogin(){
   const entered=document.getElementById('admin-pass').value;
   if(!entered){document.getElementById('login-err').textContent='Enter password.';document.getElementById('login-err').style.display='block';return;}
+  const enteredHash=await hashPass(entered);
   try{
-    const enteredHash=await hashPass(entered);
     const auth=await Storage.getAdminAuth(enteredHash);
     const storedHash=auth.passwordHash;
     if(enteredHash===storedHash){
