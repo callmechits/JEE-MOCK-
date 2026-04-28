@@ -397,7 +397,7 @@ for update to anon using (true) with check (true);</textarea>
   </div>
 </div>
 
-<script src="js/storage.js?v=8"></script>
+<script src="js/storage.js?v=9"></script>
 <script>
 let currentSubject='physics',currentType='scq',selectedCorrect=[];
 const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:null};
@@ -425,7 +425,7 @@ async function doLogin(){
       document.getElementById('login-err').style.display='block';
     }
   }catch(e){
-       let msg=e.message||'Could not verify admin password from Supabase.';
+        let msg=e.message||'Could not verify admin password from Supabase.';
     if(msg.includes('Admin password is not initialized in Supabase.')){
       msg += ` SQL: insert into admin_settings (id, password_hash, updated_at) values ('default', '${enteredHash}', now()) on conflict (id) do update set password_hash=excluded.password_hash, updated_at=now();`;
     }
@@ -749,7 +749,12 @@ async function changePass(){
     showMsg('pass-msg','Password updated in Supabase.','success');
     document.getElementById('new-pass').value='';
   }catch(e){
-    showMsg('pass-msg',`Could not update password in Supabase: ${e.message}`,'error');
+     const err=e.message||'';
+    if(err.includes('row-level security policy') || err.includes('RLS blocked')){
+      showMsg('pass-msg',`RLS blocked password update. Run this in Supabase SQL Editor: insert into admin_settings (id, password_hash, updated_at) values ('default', '${passwordHash}', now()) on conflict (id) do update set password_hash=excluded.password_hash, updated_at=now();`,'error');
+    }else{
+      showMsg('pass-msg',`Could not update password in Supabase: ${e.message}`,'error');
+    }
   }
   }
 
