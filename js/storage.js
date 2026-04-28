@@ -108,7 +108,7 @@ const Storage = {
   },
 
  // ── Admin auth (Supabase-backed with local fallback) ─────
-  async getAdminAuth() {
+   async getAdminAuth(bootstrapPasswordHash = null) {
     let rows = [];
     try {
       rows = await SB.select('admin_settings', 'id=eq.default&limit=1');
@@ -116,7 +116,18 @@ const Storage = {
       throw new Error(`Could not read admin_settings from Supabase: ${e.message}`);
     }
     if (!rows.length || !rows[0].password_hash) {
-      throw new Error('Admin password is not initialized in Supabase. Add row id="default" in admin_settings.');
+       if (!bootstrapPasswordHash) {
+        throw new Error('Admin password is not initialized in Supabase. Enter your password again to initialize it automatically.');
+      }
+      const seeded = {
+        id: 'default',
+        password_hash: bootstrapPasswordHash,
+        updated_at: new Date().toISOString()
+      };
+      await SB.upsert('admin_settings', seeded);
+      const auth = { passwordHash: bootstrapPasswordHash };
+      Cache.set('admin_auth', auth);
+      return auth;
     }
     const auth = { passwordHash: rows[0].password_hash };
     Cache.set('admin_auth', auth);
