@@ -117,7 +117,7 @@ const Storage = {
     }
     if (!rows.length || !rows[0].password_hash) {
        if (!bootstrapPasswordHash) {
-        throw new Error('Admin password is not initialized in Supabase. Enter your password again to initialize it automatically.');
+         throw new Error('Admin password is not initialized in Supabase. Create row id="default" in admin_settings from Supabase SQL Editor (anon key cannot insert due RLS).');
       }
       const seeded = {
         id: 'default',
