@@ -425,7 +425,11 @@ async function doLogin(){
       document.getElementById('login-err').style.display='block';
     }
   }catch(e){
-    document.getElementById('login-err').textContent=e.message||'Could not verify admin password from Supabase.';
+       let msg=e.message||'Could not verify admin password from Supabase.';
+    if(msg.includes('Admin password is not initialized in Supabase.')){
+      msg += ` SQL: insert into admin_settings (id, password_hash, updated_at) values ('default', '${enteredHash}', now()) on conflict (id) do update set password_hash=excluded.password_hash, updated_at=now();`;
+    }
+    document.getElementById('login-err').textContent=msg;
     document.getElementById('login-err').style.display='block';
   }
 }
