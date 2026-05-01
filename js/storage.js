@@ -2,9 +2,6 @@
 //  storage.js  —  JEEAdv26  |  Supabase backend
 // ═══════════════════════════════════════════════════════════
 
-// !! REPLACE THESE WITH YOUR ACTUAL VALUES !!
-const DEFAULT_URL  = 'https://vhjzhuzjbhnnelpleewm.supabase.co';
-const DEFAULT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoanpodXpqYmhubmVscGxlZXdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzk2NzksImV4cCI6MjA5Mjg1NTY3OX0.KedShKpfKWJcyh-Yf6-1z8cl9ucE4gimqjkWbKfcCPU';
 
 // Read from localStorage if set (admin panel), otherwise use defaults above
 function _url()  { return localStorage.getItem('jee_sb_url')  || DEFAULT_URL;  }
