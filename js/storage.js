@@ -7,6 +7,25 @@
 function _url()  { return localStorage.getItem('jee_sb_url')  || DEFAULT_URL;  }
 function _anon() { return localStorage.getItem('jee_sb_anon') || DEFAULT_ANON; }
 
+let _sessionToken = null;
+
+// call this right after successful login
+async function startSessionWatch(token) {
+  _sessionToken = token;
+  setInterval(async () => {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/get_session_token`, {
+      method: 'POST',
+      headers: { 'apikey': SB_ANON, 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    const data = await res.json();
+    if (data !== _sessionToken) {
+      alert('Session invalidated. Please log in again.');
+      location.reload();
+    }
+  }, 60000);
+}
+
 // ── Raw Supabase REST calls ──────────────────────────────────
 const SB = {
   get h() {
