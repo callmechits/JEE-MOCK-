@@ -445,30 +445,21 @@ const imgStore={question:null,solution:null,optA:null,optB:null,optC:null,optD:n
 document.getElementById('login-btn').onclick=doLogin;
 document.getElementById('admin-pass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
 
-async function doLogin(){
-  const entered = document.getElementById('admin-pass').value;
-  if(!entered){
-    document.getElementById('login-err').textContent='Enter password.';
-    document.getElementById('login-err').style.display='block';
+async function doLogin() {
+  const email = document.getElementById('admin-email').value; // add this field
+  const pass  = document.getElementById('admin-pass').value;
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email, password: pass
+  });
+  
+  if (error) {
+    document.getElementById('login-err').textContent = 'Wrong credentials.';
+    document.getElementById('login-err').style.display = 'block';
     return;
   }
-  try {
-    const ok = await Storage.verifyAdminPassword(entered);
-    if(ok){
-      document.getElementById('login-wall').classList.add('hidden');
-      init();
-    } else {
-      document.getElementById('login-err').textContent='Wrong password.';
-      document.getElementById('login-err').style.display='block';
-    }
-  } catch(e) {
-    let msg = e.message || 'Could not verify admin password from Supabase.';
-    if(msg.includes('verify_admin_password')){
-      msg = 'Missing verify_admin_password RPC. Run the SQL in Settings and retry.';
-    }
-    document.getElementById('login-err').textContent = msg;
-    document.getElementById('login-err').style.display = 'block';
-  }
+  document.getElementById('login-wall').classList.add('hidden');
+  init();
 }
 async function init(){
   await renderPapers();await populatePaperDropdown();
